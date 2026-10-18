@@ -1,0 +1,768 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ИМЕНА — футбольная аналитика 6×6</title>
+<style>
+:root{
+  --bg:#09070b;--panel:#141017;--panel2:#1d1520;--line:#382637;
+  --text:#fbf6fa;--muted:#b5a4b3;--accent:#f5c451;--accent2:#ff4fa3;
+  --red:#ff647c;--yellow:#f5c451;--blue:#ff8ac4;--radius:20px;
+}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:radial-gradient(ellipse at 80% -10%,#1a3423 0,transparent 34%),var(--bg);color:var(--text);font:15px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button,input,select{font:inherit}button{cursor:pointer}
+a{color:inherit;text-decoration:none}
+.app{display:grid;grid-template-columns:245px minmax(0,1fr);min-height:100vh}
+.sidebar{padding:26px 17px;border-right:1px solid var(--line);background:#0b120e;display:flex;flex-direction:column;gap:30px}
+.brand{display:flex;align-items:center;gap:12px;padding:0 9px}
+.crest{width:44px;height:48px;clip-path:polygon(8% 0,92% 0,86% 75%,50% 100%,14% 75%);background:var(--accent);color:#10170d;display:grid;place-items:center;font-weight:1000;font-size:18px;letter-spacing:-2px}
+.brand-name{font-weight:950;letter-spacing:.12em;font-size:18px}.brand-sub{font-size:10px;color:var(--muted);letter-spacing:.13em;text-transform:uppercase}
+.nav-label{color:#66776c;text-transform:uppercase;letter-spacing:.15em;font-size:10px;padding:0 12px;margin-bottom:7px}
+.nav{display:grid;gap:6px}.nav button{border:0;background:transparent;color:#9cac9f;text-align:left;padding:12px 13px;border-radius:12px;display:flex;gap:12px;align-items:center;font-weight:650}
+.nav button:hover,.nav button.active{background:#1b2a20;color:var(--accent)}.nav-icon{width:20px;text-align:center;font-size:17px}
+.sidebar-bottom{margin-top:auto;border:1px solid var(--line);border-radius:16px;padding:14px;background:linear-gradient(145deg,#19271c,#101712)}
+.sidebar-bottom small{color:var(--muted)}.season{font-size:12px;color:var(--accent);font-weight:800;margin-bottom:7px}
+main{min-width:0;padding:28px clamp(16px,3vw,42px) 50px;max-width:1600px;width:100%;margin:0 auto}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:28px}
+.eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.17em;color:var(--accent);font-weight:800}
+h1{font-size:clamp(28px,4vw,42px);letter-spacing:-.045em;line-height:1.08;margin:8px 0 8px}
+.subline{color:var(--muted);font-size:13px}
+.actions{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:var(--panel);color:var(--text);padding:10px 14px;border-radius:12px;font-weight:750;font-size:12px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#10160c}.btn:hover{filter:brightness(1.08)}
+.page{display:none}.page.active{display:block;animation:fade .18s ease}@keyframes fade{from{opacity:.45;transform:translateY(4px)}to{opacity:1;transform:none}}
+.hero{position:relative;overflow:hidden;background:linear-gradient(115deg,#1b3020 0%,#101b14 55%,#121a16 100%);border:1px solid #2c4530;border-radius:24px;padding:28px;margin-bottom:18px;min-height:230px}
+.hero:after{content:"6×6";position:absolute;right:1%;top:-35px;font-weight:1000;font-size:clamp(100px,18vw,230px);letter-spacing:-.1em;color:#d0ff3d0b;pointer-events:none}
+.hero-content{position:relative;z-index:1;max-width:680px}.hero-tag{display:inline-flex;align-items:center;gap:7px;border:1px solid #496137;background:#17271b;padding:6px 10px;border-radius:99px;font-size:10px;color:var(--accent);font-weight:850;text-transform:uppercase;letter-spacing:.12em}
+.hero h2{font-size:clamp(28px,4vw,46px);line-height:1.04;letter-spacing:-.05em;margin:18px 0 10px;max-width:650px}.hero p{max-width:520px;color:#b2c2b6;margin:0}
+.hero-bottom{display:flex;gap:22px;flex-wrap:wrap;margin-top:22px}.hero-mini{font-size:11px;color:var(--muted)}.hero-mini strong{display:block;color:white;font-size:17px;margin-top:3px}
+.grid{display:grid;gap:14px}.stats-grid{grid-template-columns:repeat(4,minmax(0,1fr));margin:0 0 18px}
+.card{background:linear-gradient(150deg,#141e18,#101713);border:1px solid var(--line);border-radius:var(--radius);padding:18px;min-width:0}
+.stat-head{display:flex;align-items:center;justify-content:space-between;color:var(--muted);font-size:12px;font-weight:650}.stat-symbol{display:grid;place-items:center;width:31px;height:31px;background:#263720;border-radius:10px;color:var(--accent);font-size:15px}
+.stat-value{font-size:clamp(25px,3vw,34px);font-weight:900;letter-spacing:-.05em;margin:15px 0 4px}.stat-foot{font-size:11px;color:var(--muted)}.positive{color:var(--accent)}.negative{color:var(--red)}
+.two-col{grid-template-columns:minmax(0,1.2fr) minmax(280px,.8fr)}
+.section-head{display:flex;justify-content:space-between;align-items:end;gap:12px;margin:28px 0 14px}.section-head h2{margin:0;font-size:21px;letter-spacing:-.03em}.section-head p{margin:4px 0 0;color:var(--muted);font-size:12px}
+.link-btn{background:transparent;border:0;color:var(--accent);font-weight:800;font-size:12px;padding:8px}
+.form-row{display:flex;gap:10px;flex-wrap:wrap}.search{background:#0b120e;border:1px solid var(--line);border-radius:12px;color:var(--text);padding:11px 13px;min-width:200px;outline:none}.search:focus{border-color:var(--accent)}
+.pills{display:flex;gap:6px;flex-wrap:wrap}.pill{border:1px solid var(--line);background:#0b120e;color:#9cac9f;border-radius:999px;padding:7px 11px;font-size:11px;font-weight:750}.pill.active{color:#11180b;background:var(--accent);border-color:var(--accent)}
+.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:16px}
+table{border-collapse:collapse;width:100%;min-width:650px;background:#111914}th,td{text-align:left;padding:13px 15px;border-bottom:1px solid #233128;font-size:12px;white-space:nowrap}th{font-size:10px;color:#7f9285;text-transform:uppercase;letter-spacing:.1em;background:#121c16}tr:last-child td{border-bottom:0}tbody tr:hover{background:#19251c}
+.player-cell{display:flex;align-items:center;gap:10px}.avatar{width:43px;height:43px;border-radius:13px;object-fit:cover;background:#29382d;display:grid;place-items:center;color:var(--accent);font-weight:900;border:1px solid #3b4b3e;flex-shrink:0}.player-name{font-weight:800}.player-meta{font-size:10px;color:var(--muted);margin-top:2px}.number{font-weight:850}.rank{color:var(--muted);width:25px}
+.player-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+.player-card{padding:0;overflow:hidden;cursor:pointer;transition:transform .16s,border-color .16s}.player-card:hover{transform:translateY(-3px);border-color:#5d7a3d}
+.player-cover{height:90px;background:linear-gradient(120deg,#273e26,#111a14);position:relative;overflow:hidden}.player-cover:after{content:"И";position:absolute;right:14px;top:-20px;font-size:110px;font-weight:1000;color:#d0ff3d0d;line-height:1}
+.player-card-top{display:flex;gap:13px;align-items:end;margin:-32px 16px 0;position:relative}.player-card .avatar{width:70px;height:70px;border-radius:18px;border:3px solid #111a14}
+.player-card-body{padding:12px 16px 17px}.player-card h3{margin:0;font-size:15px}.player-card .player-meta{margin-top:4px}.player-numbers{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:17px;padding-top:13px;border-top:1px solid var(--line)}.player-numbers span{display:block;color:var(--muted);font-size:10px}.player-numbers strong{font-size:17px}
+.match-list{display:grid;gap:8px}.match{display:grid;grid-template-columns:85px minmax(0,1fr) 72px;gap:12px;align-items:center;padding:13px;background:#111914;border:1px solid var(--line);border-radius:14px}.match-date{font-size:10px;color:var(--muted)}.match-teams{font-weight:800;font-size:12px}.match-sub{font-size:10px;color:var(--muted);margin-top:3px}.score{text-align:center;font-weight:950;font-size:18px;letter-spacing:.04em}.result-tag{font-size:9px;display:block;margin-top:3px;text-align:center;font-weight:850}.win{color:var(--accent)}.draw{color:var(--yellow)}.loss{color:var(--red)}
+.chart-bars{display:grid;gap:15px;margin-top:12px}.bar-row{display:grid;grid-template-columns:100px minmax(0,1fr) 28px;gap:10px;align-items:center;font-size:11px}.bar-track{height:8px;border-radius:99px;background:#27352b;overflow:hidden}.bar-fill{height:100%;background:var(--accent);border-radius:99px}
+.insight{display:flex;gap:12px;padding:14px 0;border-bottom:1px solid var(--line)}.insight:last-child{border:0;padding-bottom:0}.insight-icon{width:36px;height:36px;flex-shrink:0;border-radius:12px;background:#293a25;display:grid;place-items:center;color:var(--accent)}.insight h3{margin:0 0 4px;font-size:13px}.insight p{margin:0;color:var(--muted);font-size:11px}
+.pitch{position:relative;border:1px solid #537447;border-radius:16px;overflow:hidden;background:repeating-linear-gradient(0deg,#234c2c 0,#234c2c 50px,#285631 50px,#285631 100px);min-height:340px;padding:20px}.pitch:before{content:"";position:absolute;left:4%;right:4%;top:4%;bottom:4%;border:1px solid #d5f5d966;border-radius:4px}.pitch:after{content:"";position:absolute;left:4%;right:4%;top:50%;border-top:1px solid #d5f5d966}.center-circle{position:absolute;left:50%;top:50%;width:80px;height:80px;border:1px solid #d5f5d966;border-radius:50%;transform:translate(-50%,-50%)}
+.dot{position:absolute;z-index:2;transform:translate(-50%,-50%);width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:#111a0d;font-weight:950;border:3px solid #f4ffe0;box-shadow:0 4px 15px #0006;font-size:11px}.dot small{position:absolute;top:44px;color:white;text-shadow:0 1px 4px #000;font-size:9px;white-space:nowrap;font-weight:800}
+.tactic-note{margin-top:13px;border:1px solid #3c5332;background:#18281b;padding:14px;border-radius:14px;color:#b8c9bc;font-size:12px}.tactic-note strong{color:var(--accent)}
+.empty{padding:30px;text-align:center;color:var(--muted)}
+.footer{border-top:1px solid var(--line);margin-top:35px;padding-top:17px;display:flex;justify-content:space-between;gap:15px;flex-wrap:wrap;color:#68796d;font-size:10px}
+.modal{display:none;position:fixed;inset:0;z-index:20;background:#000b;align-items:center;justify-content:center;padding:20px}.modal.open{display:flex}.modal-card{max-width:520px;width:100%;background:#111a14;border:1px solid #3b4c3e;border-radius:22px;padding:24px;position:relative}.modal-close{position:absolute;right:15px;top:13px;background:#253429;border:0;color:white;width:34px;height:34px;border-radius:10px;font-size:18px}.modal-profile{display:flex;gap:16px;align-items:center}.modal-profile .avatar{width:90px;height:90px;border-radius:20px}.modal-profile h2{margin:0 0 5px}.modal-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:22px 0}.modal-stats div{padding:13px;background:#1a281e;border-radius:12px}.modal-stats small{display:block;color:var(--muted);font-size:10px}.modal-stats strong{font-size:23px}.source-note{font-size:10px;color:var(--muted);margin-top:14px}
+
+.week-toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.week-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.week-card{position:relative;overflow:hidden;min-width:0;border:1px solid #b5a66a;border-radius:18px;padding:10px;background:linear-gradient(150deg,#e7d9a0 0%,#a58d45 16%,#253a2a 16%,#111b15 100%);box-shadow:0 10px 25px #0003;cursor:pointer;transition:transform .15s,border-color .15s}
+.week-card:hover{transform:translateY(-3px);border-color:var(--accent)}
+.week-card:before{content:"";position:absolute;inset:5px;border:1px solid #e8dca466;border-radius:13px;pointer-events:none}
+.week-card-head{position:relative;display:flex;align-items:start;justify-content:space-between;gap:8px;color:#f9f1ce;min-height:55px}
+.week-rating{font-size:38px;line-height:1;font-weight:1000;letter-spacing:-.07em;color:#f7e8a6;text-shadow:0 2px 6px #0008}
+.week-label{font-size:9px;letter-spacing:.13em;text-transform:uppercase;font-weight:900;text-align:right;max-width:90px}
+.week-photo{height:180px;margin:5px 0 10px;position:relative;overflow:hidden;border-radius:12px;background:radial-gradient(ellipse at 50% 25%,#53694b,#19251b 72%);border:1px solid #d7c67b88;display:grid;place-items:center}
+.week-photo img{width:100%;height:100%;object-fit:cover;object-position:center 25%;display:block}
+.goat-fallback{display:grid;place-items:center;width:100%;height:100%;font-size:clamp(32px,4vw,56px);font-weight:1000;letter-spacing:-.06em;color:#f4e6a2;text-shadow:0 4px 18px #0009;background:radial-gradient(circle at center,#455b38,#172319 68%)}
+.week-player-name{font-size:14px;font-weight:950;line-height:1.2;min-height:34px;overflow-wrap:anywhere;color:#fff8dc}
+.week-position{font-size:10px;color:#c4d1bd;margin-top:3px;min-height:15px}
+.week-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin-top:12px;padding-top:10px;border-top:1px solid #d9c98566;text-align:center}
+.week-stats span{display:block;font-size:9px;color:#d1d7c2;text-transform:uppercase;letter-spacing:.05em}
+.week-stats strong{display:block;font-size:18px;color:#fff1b6;margin-top:2px}
+.week-card-foot{display:flex;justify-content:space-between;gap:6px;align-items:center;margin-top:10px;font-size:9px;color:#c4d1bd}
+.week-badge{padding:4px 7px;border-radius:99px;background:#e8d58b;color:#172016;font-weight:900;white-space:nowrap}
+.week-note{font-size:11px;color:var(--muted);margin-top:13px;line-height:1.6}
+@media(max-width:1050px){.week-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:1050px){.app{grid-template-columns:78px minmax(0,1fr)}.sidebar{padding:20px 10px}.brand{justify-content:center;padding:0}.brand-text,.nav-label,.nav button .nav-text,.sidebar-bottom{display:none}.nav button{justify-content:center;padding:13px}.nav-icon{font-size:18px}.player-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.week-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:650px){.app{display:block}.sidebar{position:sticky;top:0;z-index:10;flex-direction:row;align-items:center;border-right:0;border-bottom:1px solid var(--line);padding:8px 12px;gap:12px}.brand{flex-shrink:0}.crest{width:36px;height:39px}.nav{display:flex;overflow:auto;gap:3px;flex:1}.nav button{padding:10px 12px;flex-shrink:0}.topbar{align-items:flex-start;flex-direction:column}.actions{width:100%}.hero{padding:21px}.stats-grid{gap:9px}.card{padding:14px}.two-col{grid-template-columns:1fr}.player-grid{grid-template-columns:1fr 1fr;gap:9px}.week-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.week-photo{height:145px}.week-card{padding:8px}.week-rating{font-size:32px}.player-card-body{padding:10px}.player-card h3{font-size:12px}.player-numbers strong{font-size:15px}.player-card-top{margin-left:10px;margin-right:10px}.player-card .avatar{width:56px;height:56px}.match{grid-template-columns:60px minmax(0,1fr) 58px;gap:7px;padding:10px}.match-teams{font-size:11px}main{padding:18px 12px 35px}.section-head{margin-top:22px}.search{min-width:0;flex:1;width:100%}.form-row{width:100%}.bar-row{grid-template-columns:82px minmax(0,1fr) 24px}.pitch{min-height:300px}.dot{width:34px;height:34px}.dot small{top:37px;font-size:8px}}
+
+/* Black · pink · gold theme */
+body{background:radial-gradient(ellipse at 82% -8%,#40152f 0,transparent 34%),var(--bg)}
+.sidebar{background:#0d090f}
+.crest{background:var(--accent);color:#171016;box-shadow:0 0 22px #f5c45120}
+.nav-label{color:#8f7188}
+.nav button{color:#c4b2c2}
+.nav button:hover,.nav button.active{background:#32172a;color:var(--accent2)}
+.sidebar-bottom{background:linear-gradient(145deg,#291323,#100b12)}
+.nav button.active .nav-icon{color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#171016}
+.hero{background:linear-gradient(115deg,#351329 0%,#1b111e 54%,#110d15 100%);border-color:#6c2d53}
+.hero:after{color:#ff4fa30d}
+.hero-tag{border-color:#713050;background:#2c1426;color:#ff8ac4}
+.hero p{color:#d0b9cb}
+.card{background:linear-gradient(150deg,#1b1420,#100c13);border-color:var(--line)}
+.stat-symbol{background:#35172b;color:var(--accent2)}
+.search,.pill{background:#100b13}
+.search:focus{border-color:var(--accent2)}
+.pill.active{color:#1b1018;background:var(--accent);border-color:var(--accent)}
+table{background:#120d15}
+th,td{border-bottom-color:#30202f}
+th{color:#c6a7bd;background:#1b111d}
+tbody tr:hover{background:#271323}
+.avatar{background:#281323;color:var(--accent);border-color:#6c3155}
+.player-card:hover{border-color:var(--accent2)}
+.player-cover{background:linear-gradient(120deg,#49203c,#130e17)}
+.player-cover:after{color:#ff4fa30d}
+.player-card .avatar{border-color:#171019}
+.match{background:#130e16;border-color:var(--line)}
+.bar-track{background:#382335}
+.bar-fill{background:linear-gradient(90deg,var(--accent2),var(--accent))}
+.insight-icon{background:#35172b;color:var(--accent2)}
+.pitch{border-color:#a94b82;background:repeating-linear-gradient(0deg,#251421 0,#251421 50px,#2d1727 50px,#2d1727 100px)}
+.pitch:before,.pitch:after,.center-circle{border-color:#f5c45199}
+.pitch:after{border-top-color:#f5c45199}
+.dot{background:var(--accent);color:#171016;border-color:#fff0c2}
+.tactic-note{border-color:#69304f;background:#21121f;color:#d7bfd1}
+.tactic-note strong{color:var(--accent)}
+.modal-card{background:#17101a;border-color:#5a2b4a}
+.modal-close{background:#35172b}
+.modal-stats div{background:#281523}
+.week-card{border-color:#f5c451;background:linear-gradient(150deg,#f5c451 0%,#9b682c 13%,#301326 13%,#100b13 100%)}
+.week-card:before{border-color:#f5c45166}
+.week-card:hover{border-color:var(--accent2)}
+.week-card-head{color:#fff0c2}
+.week-rating{color:#f5c451}
+.week-photo{background:radial-gradient(ellipse at 50% 25%,#56233f,#170d18 72%);border-color:#f5c45188}
+.goat-fallback{color:#f5c451;background:radial-gradient(circle at center,#54203d,#140b16 68%)}
+.week-player-name{color:#fff5fa}
+.week-position{color:#d8b6cc}
+.week-stats{border-top-color:#f5c45166}
+.week-stats span{color:#d7b8cf}
+.week-stats strong{color:#ffe6a0}
+.week-card-foot{color:#d8b6cc}
+.week-badge{background:#f5c451;color:#1b1018}
+.footer{color:#8f7188}
+
+
+/* Тактический помощник */
+.tactics-intro{margin-bottom:16px;background:linear-gradient(125deg,#171019,#261323 65%,#191018);border-color:#6b3156}
+.tactics-intro h2{margin:6px 0 8px;font-size:25px}.tactics-intro p{max-width:850px;color:var(--muted);line-height:1.6;margin:0}
+.tactics-layout{align-items:start}.tactic-controls{display:grid;grid-template-columns:1fr;gap:7px;margin-bottom:16px}.tactic-controls label{font-size:12px;color:var(--muted);font-weight:700;margin-top:4px}.tactic-controls .search{width:100%;min-width:0}.primary-btn{border:1px solid #f5c451;background:linear-gradient(120deg,#f5c451,#ff4fa3);color:#130a12;font-weight:800;border-radius:12px;padding:12px 14px;cursor:pointer;margin-top:8px}.formation-board{min-height:390px;display:block}.formation-dot{position:absolute;transform:translate(-50%,-50%);width:48px;height:48px;border:2px solid #f5c451;border-radius:50%;background:#120b13;color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;box-shadow:0 4px 14px #0008;z-index:2;text-align:center;padding:3px}.formation-dot small{position:absolute;top:49px;white-space:nowrap;color:#fff;font-size:10px;font-weight:700;text-shadow:0 1px 4px #000}.formation-dot.keeper{border-color:#ff4fa3;background:#38142d}.tactic-note{margin-top:14px;padding:13px 14px;background:#201421;border:1px solid #4b2a42;border-radius:12px;line-height:1.55;color:#e9dce8}.lineup-recommendation{display:grid;gap:10px}.lineup-role{display:grid;grid-template-columns:32px minmax(0,1fr) auto;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#171019}.lineup-role .role-number{width:30px;height:30px;border-radius:9px;background:#2a1728;color:#f5c451;display:grid;place-items:center;font-size:11px;font-weight:800}.lineup-role strong{display:block;font-size:13px}.lineup-role small{color:var(--muted);font-size:11px}.lineup-role .role-score{font-size:12px;color:#f5c451;font-weight:800;white-space:nowrap}.match-advice{margin-top:14px}.advice-item{padding:12px 14px;border-left:3px solid var(--accent2);background:#1b111b;border-radius:0 10px 10px 0;margin-top:8px}.advice-item strong{display:block;margin-bottom:4px}.advice-item p{margin:0;color:var(--muted);font-size:13px;line-height:1.5}.formation-cards{grid-template-columns:repeat(5,minmax(0,1fr))}.formation-card{text-align:left;border:1px solid var(--line);border-radius:14px;padding:14px;background:#171019;color:var(--text);cursor:pointer;display:flex;flex-direction:column;gap:7px;min-height:150px}.formation-card:hover,.formation-card.active{border-color:#f5c451;background:#251523}.formation-card strong{font-size:22px;color:#f5c451}.formation-card span{font-size:12px;color:#ff75b7;font-weight:800}.formation-card small{font-size:11px;line-height:1.45;color:var(--muted)}
+@media(max-width:900px){.formation-cards{grid-template-columns:repeat(2,minmax(0,1fr))}.formation-card:last-child{grid-column:1/-1}}
+@media(max-width:650px){.formation-board{min-height:320px}.formation-dot{width:38px;height:38px;font-size:9px}.formation-dot small{top:39px;font-size:9px}.formation-cards{grid-template-columns:1fr 1fr}.formation-card{padding:10px;min-height:145px}.formation-card strong{font-size:19px}}
+
+/* Лига, цели сезона и мини-игра */
+.my-team-row{background:#32162c!important;outline:1px solid #ff4fa355}.my-team-row td:first-child,.my-team-row strong{color:#f5c451}.table-wrap{overflow-x:auto}.table-wrap table{min-width:620px}.game-scoreboard{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0 18px}.game-scoreboard>div{padding:12px;background:#211321;border:1px solid #513047;border-radius:12px;display:flex;flex-direction:column;gap:5px}.game-scoreboard span{font-size:11px;color:var(--muted)}.game-scoreboard strong{font-size:23px;color:#f5c451}.goal-frame{position:relative;height:190px;overflow:hidden;border:5px solid #f5c451;border-bottom-width:10px;border-radius:8px 8px 0 0;background:repeating-linear-gradient(0deg,#241524,#241524 14px,#2b1b2b 14px,#2b1b2b 16px),repeating-linear-gradient(90deg,transparent,transparent 24px,#ffffff12 24px,#ffffff12 26px)}.goal-net{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(90deg,transparent,transparent 32px,#ffffff16 32px,#ffffff16 34px),repeating-linear-gradient(0deg,transparent,transparent 24px,#ffffff16 24px,#ffffff16 26px)}.goal-targets{position:absolute;inset:18px 10px 12px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;z-index:2}.goal-target{border:1px solid #ff4fa366;border-radius:10px;background:#100a10aa;color:#f5c451;font-size:35px;font-weight:900;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}.goal-target small{font-size:10px;letter-spacing:1px}.goal-target:hover:not(:disabled){background:#ff4fa344;border-color:#ff4fa3}.goal-target:disabled{opacity:.55;cursor:not-allowed}
+@media(max-width:700px){.game-scoreboard strong{font-size:19px}.goal-frame{height:155px}}
+
+
+/* Player-character progression */
+.character-pick-card{background:linear-gradient(145deg,#19111c,#100b12);border-color:#573047}
+.character-level-chip{border:1px solid #f5c45166;background:#2b1b20;color:#f5c451;padding:7px 11px;border-radius:999px;font-size:10px;font-weight:950;letter-spacing:.08em;white-space:nowrap}
+.game-character-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(125px,1fr));gap:10px}
+.game-character{border:1px solid #3b293c;background:#120d15;color:var(--text);border-radius:15px;padding:10px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;min-width:0;transition:.15s}
+.game-character:hover{border-color:#ff4fa3;transform:translateY(-2px)}
+.game-character.selected{border:2px solid #f5c451;background:linear-gradient(160deg,#382033,#171019);box-shadow:0 0 0 2px #f5c45120}
+.game-character img{width:68px;height:68px;border-radius:50%;object-fit:cover;border:2px solid #ff4fa366;background:#211321}
+.avatar-fallback{display:inline-grid;place-items:center;flex-shrink:0;font-style:normal;font-weight:900;letter-spacing:.02em;background:linear-gradient(145deg,#32172a,#171019 72%);color:#f5c451;border:1px solid #ff4fa366;text-shadow:0 1px 8px #0008}
+.player-card .avatar-fallback{width:70px;height:70px;border-radius:18px;border:3px solid #171019}
+.game-character .avatar-fallback{width:68px;height:68px;border-radius:50%;font-size:18px}
+.selected-character-panel .avatar-fallback{width:76px;height:76px;border-radius:17px;border:2px solid #f5c451;font-size:21px}
+.modal-profile .avatar-fallback{width:90px;height:90px;border-radius:20px;font-size:24px}
+@media(max-width:650px){.player-card .avatar-fallback{width:56px;height:56px}.selected-character-panel .avatar-fallback{width:60px;height:60px}}
+.game-character strong{font-size:11px;line-height:1.25}.game-character small{font-size:10px;color:#b5a4b3}
+.character-rating{font-size:23px;font-weight:1000;color:#f5c451;line-height:1}.character-xp{height:5px;width:100%;background:#3a2939;border-radius:99px;overflow:hidden}.character-xp span{display:block;height:100%;background:linear-gradient(90deg,#ff4fa3,#f5c451);border-radius:99px}
+.selected-character-panel{display:flex;gap:14px;align-items:center;margin-top:14px;padding:14px;border:1px solid #493047;background:#1b121e;border-radius:15px}
+.selected-character-panel img{width:76px;height:76px;object-fit:cover;border-radius:17px;border:2px solid #f5c451}.selected-character-info{flex:1;min-width:0}.selected-character-info h3{margin:0;font-size:17px}.selected-character-info p{margin:3px 0;color:#b5a4b3;font-size:11px}.rating-track{height:8px;background:#392638;border-radius:99px;overflow:hidden;margin-top:8px}.rating-track span{display:block;height:100%;background:linear-gradient(90deg,#ff4fa3,#f5c451)}
+@media(max-width:650px){.game-character-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.selected-character-panel img{width:60px;height:60px}}
+
+
+/* Official club assets supplied by the team */
+.brand-crest-img{width:48px;height:48px;object-fit:cover;object-position:center;border-radius:12px;border:1px solid #f5c45188;box-shadow:0 0 18px #f5c45118;flex-shrink:0}
+.club-media{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(220px,.85fr);gap:16px;margin:18px 0 24px}
+.club-photo-main,.club-photo-side{position:relative;overflow:hidden;border:1px solid #382637;border-radius:18px;background:#141017;min-height:190px}
+.club-photo-main img,.club-photo-side img{display:block;width:100%;height:100%;min-height:190px;max-height:340px;object-fit:cover}
+.club-photo-main img{object-position:center 42%}
+.club-photo-side{display:flex;flex-direction:column}
+.club-photo-side img{max-height:220px;object-position:center 38%}
+.club-photo-caption{padding:10px 13px;color:#fbf6fa;font-size:12px;background:linear-gradient(90deg,#0b080eeF,#201020E8)}
+.club-kit-strip{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:0 0 24px}
+.club-kit-card{overflow:hidden;border:1px solid #382637;border-radius:18px;background:#141017}
+.club-kit-card img{display:block;width:100%;height:190px;object-fit:cover;background:#f3f0eb}
+.club-kit-card div{padding:12px 14px}
+.club-kit-card strong{display:block;color:#f5c451;margin-bottom:3px}
+.club-kit-card span{font-size:12px;color:#b5a4b3}
+@media(max-width:760px){.club-media{grid-template-columns:1fr}.club-photo-main img{max-height:280px}.club-kit-strip{grid-template-columns:1fr 1fr}.club-kit-card img{height:140px}}
+@media(max-width:480px){.club-kit-strip{grid-template-columns:1fr}.club-kit-card img{height:auto;max-height:240px}}
+
+
+.roster-portrait-section{margin:20px 0 28px;padding:18px;border:1px solid #382637;border-radius:20px;background:linear-gradient(145deg,#141017,#0d0a10)}
+.section-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.section-heading h2{margin:3px 0 0;color:#fbf6fa;font-size:22px}
+.eyebrow{font-size:10px;letter-spacing:.16em;font-weight:800;color:#ff4fa3}
+.roster-count{font-size:11px;color:#f5c451;border:1px solid #f5c45155;border-radius:99px;padding:6px 10px}
+.roster-portrait-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+.roster-portrait-card{overflow:hidden;border:1px solid #382637;border-radius:14px;background:#1d1520;min-width:0}
+.roster-portrait-card img{display:block;width:100%;aspect-ratio:1/1;object-fit:cover;background:#141017}
+.roster-portrait-card div{padding:9px 8px;font-size:12px;font-weight:700;color:#fbf6fa;line-height:1.25}
+@media(max-width:900px){.roster-portrait-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:600px){.roster-portrait-section{padding:12px}.roster-portrait-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.roster-portrait-card div{font-size:11px}}
+
+
+/* Keep club portraits visible on all player cards */
+.avatar,.player-avatar,.character-avatar,.weekly-player-photo{object-fit:cover;object-position:center 30%}
+.avatar-fallback{display:inline-grid;place-items:center;background:linear-gradient(145deg,#32172a,#171019 72%);color:#f5c451;border:1px solid #ff4fa366;font-weight:900}
+
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+  <div class="brand"><img class="brand-crest-img" src="assets/club-crest.jpg" alt="Эмблема ФК Имена"><div class="brand-text"><div class="brand-name">ИМЕНА</div><div class="brand-sub">Football lab · 6×6</div></div></div>
+  <div><div class="nav-label">Команда</div><nav class="nav" id="nav">
+    <button class="active" data-page="overview"><span class="nav-icon">▦</span><span class="nav-text">Обзор команды</span></button>
+    <button data-page="matches"><span class="nav-icon">◷</span><span class="nav-text">Матчи</span></button>
+    <button data-page="players"><span class="nav-icon">♙</span><span class="nav-text">Игроки</span></button>
+    <button data-page="week"><span class="nav-icon">★</span><span class="nav-text">Карточки недели</span></button>
+    <button data-page="opponents"><span class="nav-icon">◎</span><span class="nav-text">Соперники</span></button>
+    <button data-page="tactics"><span class="nav-icon">⌗</span><span class="nav-text">Тактика и схемы</span></button>
+    <button data-page="league"><span class="nav-icon">🏆</span><span class="nav-text">Таблица и бомбардиры</span></button>
+    <button data-page="goals"><span class="nav-icon">🎯</span><span class="nav-text">Цели сезона</span></button>
+    <button data-page="game"><span class="nav-icon">⚽</span><span class="nav-text">Мини-игра</span></button>
+  </nav></div>
+  <div class="sidebar-bottom"><div class="season">● 7 СЕЗОН · 2026</div><strong>Работаем над прогрессом</strong><br><small>Матч — 50 минут · формат 6×6</small></div>
+</aside>
+<main>
+  <header class="topbar"><div><div class="eyebrow">Сезон 2026 · 7 сезон</div><h1 id="page-title">Обзор команды</h1><div class="subline">Статистика, форма и игровые решения команды «Имена»</div><div class="source-note" id="sync-status">Показан сохранённый снимок данных · подключение к серверу…</div></div><div class="actions"><a class="btn" target="_blank" rel="noreferrer" href="https://msk-6x6.ru/tournament/1065992/teams/application?team_id=1543529">↗ Сайт лиги</a><button class="btn" id="refresh">↻ Обновить с сайта</button><button class="btn primary" id="export">Экспорт данных ↓</button></div></header>
+
+  <section class="page active" id="page-overview">
+    <div class="hero"><div class="hero-content"><span class="hero-tag">✦ Командный профиль</span><h2>Каждый матч — данные.<br>Каждая деталь — прогресс.</h2><p>Аналитическая панель команды «Имена» в формате 6×6. Смотри форму, изучай игроков и готовь план на следующие 50 минут.</p><div class="hero-bottom"><div class="hero-mini">МАТЧЕЙ В ТУРНИРЕ<strong id="hero-played">Обновляем…</strong></div><div class="hero-mini">СОСТАВ<strong id="hero-squad">22 игрока</strong></div><div class="hero-mini">ФОРМАТ<strong>6 × 6 · 50 мин</strong></div></div></div>
+
+<section class="club-media" aria-label="Фотографии команды">
+  <div class="club-photo-main">
+    <img src="assets/team-match-1.jpg" alt="Игроки ФК Имена после матча" loading="lazy">
+    <div class="club-photo-caption">ФК «Имена» · наша команда</div>
+  </div>
+  <div class="club-photo-side">
+    <img src="assets/goalkeepers.jpg" alt="Игроки команды Имена в форме вратаря и полевого игрока" loading="lazy">
+    <div class="club-photo-caption">Команда начинается с каждого</div>
+  </div>
+</section>
+<section class="club-kit-strip" aria-label="Эмблема и игровая форма">
+  <article class="club-kit-card">
+    <img src="assets/home-kit.jpg" alt="Домашняя форма ФК Имена" loading="lazy">
+    <div><strong>Наша форма</strong><span>Чёрный, розовый и золотой — цвета «Имен»</span></div>
+  </article>
+  <article class="club-kit-card">
+    <img src="assets/club-crest.jpg" alt="Эмблема футбольного клуба Имена" loading="lazy">
+    <div><strong>Эмблема клуба</strong><span>ФК «Имена» · 2026</span></div>
+  </article>
+</section>
+
+<section class="roster-portrait-section">
+  <div class="section-heading">
+    <div><div class="eyebrow">НАШ СОСТАВ</div><h2>Игроки «Имен»</h2></div>
+    <span class="roster-count">10 портретов</span>
+  </div>
+  <div class="roster-portrait-grid">
+    <article class="roster-portrait-card"><img src="assets/players/player-01.jpg" alt="Бибик Родион" loading="lazy"><div>Бибик Родион</div></article>
+    <article class="roster-portrait-card"><img src="assets/players/player-02.jpg" alt="Богодист Даниил" loading="lazy"><div>Богодист Даниил</div></article>
+    <article class="roster-portrait-card"><img src="assets/players/player-03.jpg" alt="Жулин Степан" loading="lazy"><div>Жулин Степан</div></article>
+    <article class="roster-portrait-card"><img src="assets/players/player-04.jpg" alt="Маркунин Евгений" loading="lazy"><div>Маркунин Евгений</div></article>
+    <article class="roster-portrait-card"><img src="assets/players/player-05.jpg" alt="Матвиенко Никита" loading="lazy"><div>Матвиенко Никита</div></article>
+    <article class="roster-portrait-card"><img src="assets/players/player-06.jpg" alt="Назаренко Даниил" loading="lazy"><div>Назаренко Даниил</div></article>
+    <article class="roster-portrait-card"><img src="assets/players/player-07.jpg" alt="Савин Иван" loading="lazy"><div>Савин Иван</div></article>
+    <article class="roster-portrait-card"><img src="assets/players/player-08.jpg" alt="Сингх Арян" loading="lazy"><div>Сингх Арян</div></article>
+    <article class="roster-portrait-card"><img src="assets/players/player-09.jpg" alt="Трофимчук Вадим" loading="lazy"><div>Трофимчук Вадим</div></article>
+    <article class="roster-portrait-card"><img src="assets/players/player-10.jpg" alt="Факалы Пётр" loading="lazy"><div>Факалы Пётр</div></article>
+  </div>
+</section>
+
+</div>
+    <div class="grid stats-grid" id="team-stats"></div>
+    <div class="grid two-col">
+      <div class="card"><div class="section-head" style="margin:0 0 12px"><div><h2>Последние матчи</h2><p>Результаты из опубликованной страницы лиги</p></div><button class="link-btn" data-go="matches">Все матчи →</button></div><div class="match-list" id="recent-matches"></div></div>
+      <div class="card"><div class="section-head" style="margin:0 0 8px"><div><h2>Ключевые наблюдения</h2><p>Что стоит проверить в игре</p></div></div><div id="insights"></div></div>
+    </div>
+    <div class="section-head"><div><h2>Лидеры команды</h2><p>По статистике текущего сезона на сайте лиги</p></div><button class="link-btn" data-go="players">Весь состав →</button></div>
+    <div class="grid player-grid" id="leaders"></div>
+  </section>
+
+  <section class="page" id="page-matches">
+    <div class="card"><div class="section-head" style="margin:0 0 14px"><div><h2>Матчи команды</h2><p>Выбери результат, чтобы отфильтровать список</p></div></div><div class="pills" id="match-filters"><button class="pill active" data-filter="all">Все</button><button class="pill" data-filter="win">Победы</button><button class="pill" data-filter="draw">Ничьи</button><button class="pill" data-filter="loss">Поражения</button></div><div class="match-list" id="all-matches" style="margin-top:15px"></div></div>
+  </section>
+
+  <section class="page" id="page-players">
+    <div class="card"><div class="section-head" style="margin:0 0 14px"><div><h2>Игроки «Имена»</h2><p>Поиск по составу и сортировка по показателям</p></div></div>
+      <div class="form-row" style="margin-bottom:15px"><input class="search" id="player-search" placeholder="Найти игрока…" aria-label="Найти игрока"><select class="search" id="sort-players" aria-label="Сортировка"><option value="goals">Сначала голы</option><option value="assists">Сначала передачи</option><option value="games">Сначала матчи</option><option value="name">По имени</option></select></div>
+      <div class="grid player-grid" id="player-grid"></div><p class="source-note">Показываем только реальные фото, опубликованные на сайте лиги. Если профиль лиги содержит стандартную заглушку или фото не найдено, отображаются инициалы игрока — вымышленные фотографии не подставляются. После загрузки фото в профиль лиги оно появится при обновлении.</p>
+    </div>
+  </section>
+
+  <section class="page" id="page-week">
+    <div class="hero" style="min-height:190px"><div class="hero-content"><span class="hero-tag">★ WEEKLY PLAYER CARDS</span><h2>Карточки недели</h2><p>Только игроки «Имен». Рейтинг рассчитывается за последние 7 дней по матчевой статистике из профилей игроков на сайте лиги.</p><div class="hero-bottom"><div class="hero-mini">РЕЙТИНГ<strong>82–90</strong></div><div class="hero-mini">ПРИОРИТЕТ<strong>Голы и ассисты</strong></div><div class="hero-mini">ПЕРИОД<strong id="week-period">Последние 7 дней</strong></div></div></div></div>
+    <div class="week-toolbar"><div><strong>Состав команды</strong><div class="source-note" id="week-summary">Карточки обновляются вместе со статистикой лиги.</div></div><div class="pills" id="week-filters"><button class="pill active" data-week-filter="all">Весь состав</button><button class="pill" data-week-filter="active">Были в матчах</button><button class="pill" data-week-filter="scorers">Гол или ассист</button></div></div>
+    <div class="week-grid" id="week-grid"></div>
+    <p class="week-note">Рейтинг — внутренняя оценка сайта, не официальный рейтинг лиги. Если за последние 7 дней нет матчей или источник не публикует матчевые показатели, карточка получает базовые 82 очка и нулевую статистику недели. Если фото в профиле лиги отсутствует или не загрузилось, вместо него отображается GOAT.</p>
+  </section>
+
+  <section class="page" id="page-opponents">
+    <div class="grid stats-grid" id="opponent-stats"></div>
+    <div class="card"><div class="section-head" style="margin:0 0 14px"><div><h2>Соперники 7-го сезона</h2><p>Результаты и голы в матчах против команды «Имена»</p></div></div><div class="table-wrap"><table><thead><tr><th>Соперник</th><th>Счёт</th><th>Итог</th><th>Забито</th><th>Пропущено</th></tr></thead><tbody id="opponent-table"></tbody></table></div></div>
+  </section>
+
+  <section class="page" id="page-tactics">
+    <div class="tactics-intro card">
+      <div class="eyebrow">FOOTBALL LAB · 6×6</div>
+      <h2>Тактический помощник «Имена»</h2>
+      <p>Выбери схему и игровой план — сайт соберёт рекомендацию на основе доступной статистики игроков и наших результатов. Это подсказка для тренера, а не замена информации о посещаемости и реальных позициях.</p>
+    </div>
+    <div class="grid two-col tactics-layout">
+      <div class="card">
+        <div class="section-head" style="margin:0 0 14px"><div><h2>Схема и сценарий</h2><p>5 полевых игроков + вратарь</p></div></div>
+        <div class="tactic-controls">
+          <label for="formation-select">Расстановка</label>
+          <select id="formation-select" class="search">
+            <option value="2-2-1">2–2–1 · баланс</option><option value="1-3-1">1–3–1 · контроль центра</option><option value="2-1-2">2–1–2 · атака в два игрока</option><option value="3-1-1">3–1–1 · компактная оборона</option><option value="1-2-2">1–2–2 · высокий прессинг</option>
+          </select>
+          <label for="game-plan">Игровой план</label>
+          <select id="game-plan" class="search">
+            <option value="balanced">Сбалансированно</option><option value="press">Высокий прессинг</option><option value="counter">Контратаки</option><option value="lead">Удерживаем преимущество</option><option value="chase">Нужно отыгрываться</option>
+          </select>
+          <label for="opponent-select">Соперник из календаря</label>
+          <select id="opponent-select" class="search"><option value="">Общая рекомендация</option></select>
+          <label for="keeper-select">Вратарь (укажи вручную)</label>
+          <select id="keeper-select" class="search"><option value="">Не выбран — назначьте перед матчем</option></select>
+          <button id="recommend-lineup" class="primary-btn" type="button">Собрать рекомендуемую основу</button>
+        </div>
+        <div id="formation-board" class="pitch formation-board"><div class="center-circle"></div></div>
+        <div id="formation-summary" class="tactic-note"></div>
+      </div>
+      <div class="card">
+        <div class="section-head" style="margin:0 0 8px"><div><h2>Рекомендация на матч</h2><p>Обновляется при изменении схемы, плана или соперника</p></div></div>
+        <div id="lineup-recommendation" class="lineup-recommendation"><div class="insight"><div class="insight-icon">XI</div><div><h3>Соберём стартовую шестёрку</h3><p>Выбери вратаря, схему и план. Программа ранжирует полевых игроков по результативности на матч, общему вкладу и соответствию указанному амплуа.</p></div></div></div>
+        <div id="match-advice" class="match-advice"></div>
+        <p class="source-note">Ограничение данных: публичная статистика не показывает игровое время, усталость, посещаемость, отборы и потери. Поэтому рейтинг не равен полной оценке игрока. Если амплуа не указано, программа не будет выдавать его за подтверждённый факт.</p>
+      </div>
+    </div>
+    <div class="card formation-library">
+      <div class="section-head" style="margin:0 0 14px"><div><h2>Библиотека схем</h2><p>Меняй расстановку под соперника и счёт</p></div></div>
+      <div class="grid formation-cards">
+        <button class="formation-card" data-formation="2-2-1"><strong>2–2–1</strong><span>Баланс</span><small>Базовая схема: две линии поддержки, один игрок выше для завершения атак.</small></button>
+        <button class="formation-card" data-formation="1-3-1"><strong>1–3–1</strong><span>Контроль мяча</span><small>Три игрока в средней линии помогают выходить из прессинга и создавать треугольники.</small></button>
+        <button class="formation-card" data-formation="2-1-2"><strong>2–1–2</strong><span>Два впереди</span><small>Два атакующих игрока растягивают оборону; центральный полузащитник связывает линии.</small></button>
+        <button class="formation-card" data-formation="3-1-1"><strong>3–1–1</strong><span>Компактность</span><small>Три игрока ниже — для защиты преимущества и игры против сильной атаки.</small></button>
+        <button class="formation-card" data-formation="1-2-2"><strong>1–2–2</strong><span>Давление</span><small>Два игрока выше начинают прессинг, но единственный защитник нуждается в страховке.</small></button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-head" style="margin:0 0 14px"><div><h2>План на 50 минут</h2><p>Базовые ориентиры, которые можно адаптировать по ходу игры</p></div></div>
+      <div class="grid two-col">
+        <div class="insight"><div class="insight-icon">01</div><div><h3>0–10 мин · Считать соперника</h3><p>Начать компактно, определить, кто у соперника начинает атаки и куда он направляет первый пас. Не бросаться в прессинг всем составом.</p></div></div>
+        <div class="insight"><div class="insight-icon">02</div><div><h3>10–25 мин · Выход из обороны</h3><p>Создавать треугольники для короткого паса. После потери ближайший игрок задерживает атаку, остальные закрывают передачу вперёд.</p></div></div>
+        <div class="insight"><div class="insight-icon">03</div><div><h3>25–40 мин · Управлять темпом</h3><p>Планировать смены заранее, если правила позволяют. Не подключать обоих защитников одновременно без подстраховки.</p></div></div>
+        <div class="insight"><div class="insight-icon">04</div><div><h3>40–50 мин · Играть по счёту</h3><p>Ведём — бережём мяч и сохраняем страховку. Проигрываем — добавляем игрока выше, но оставляем одного ответственного за контратаку соперника.</p></div></div>
+      </div>
+    </div>
+  </section>
+  <section class="page" id="page-league">
+    <div class="hero" style="min-height:175px"><div class="hero-content"><span class="hero-tag">🏆 7 СЕЗОН · 2026</span><h2>Чемпионат целиком</h2><p>Общая таблица турнира и бомбардиры всех команд. Данные загружаются с публичных страниц лиги и обновляются вместе с остальной статистикой.</p><div class="hero-bottom"><div class="hero-mini">НАША ПОЗИЦИЯ<strong id="league-position">—</strong></div><div class="hero-mini">ОЧКИ<strong id="league-points">—</strong></div><div class="hero-mini">БОМБАРДИРЫ<strong id="scorer-count">—</strong></div></div></div></div>
+    <div class="grid two-col">
+      <div class="card"><div class="section-head"><div><h2>Турнирная таблица</h2><p>Место, матчи, результаты, разница мячей и очки</p></div><a class="link-btn" href="https://msk-6x6.ru/tournament/1065992/tables" target="_blank" rel="noreferrer">Источник ↗</a></div><div class="table-wrap"><table><thead><tr><th>#</th><th>Команда</th><th>И</th><th>В</th><th>Н</th><th>П</th><th>МЗ–МП</th><th>РМ</th><th>О</th></tr></thead><tbody id="league-table-body"><tr><td colspan="9">Загружаем таблицу лиги…</td></tr></tbody></table></div><p class="source-note" id="league-table-note">Источник: сайт лиги</p></div>
+      <div class="card"><div class="section-head"><div><h2>Бомбардиры лиги</h2><p>Голы и средняя результативность за матч</p></div><a class="link-btn" href="https://msk-6x6.ru/tournament/1065992/stats" target="_blank" rel="noreferrer">Вся статистика ↗</a></div><div class="table-wrap"><table><thead><tr><th>#</th><th>Игрок</th><th>Команда</th><th>И</th><th>Г</th><th>Г/И</th></tr></thead><tbody id="league-scorers-body"><tr><td colspan="6">Загружаем бомбардиров…</td></tr></tbody></table></div><p class="source-note" id="league-scorers-note">Рейтинг всей лиги, не только «Имен»</p></div>
+    </div>
+  </section>
+  <section class="page" id="page-goals">
+    <div class="hero" style="min-height:175px"><div class="hero-content"><span class="hero-tag">🎯 ROAD TO PROGRESS</span><h2>Цели «Имен»</h2><p>Не абстрактные обещания, а ориентиры, рассчитанные по месту в таблице, отставанию от ближайших соперников и оставшимся матчам.</p></div></div>
+    <div class="grid stats-grid" id="goal-stats"></div>
+    <div class="grid two-col"><div class="card"><div class="section-head"><div><h2>Приоритеты сезона</h2><p>Что реально можно улучшить на поле</p></div></div><div id="season-goals"></div></div><div class="card"><div class="section-head"><div><h2>Ближайшие ориентиры</h2><p>Соперники рядом в таблице и сколько очков до них</p></div></div><div id="goal-rivals"></div></div></div>
+    <p class="source-note">Прогноз не гарантирует итоговое место: он использует текущую таблицу и число матчей. Если сайт лиги не отдаёт часть данных, цель будет отмечена как предварительная.</p>
+  </section>
+  <section class="page" id="page-game">
+    <div class="hero" style="min-height:170px"><div class="hero-content"><span class="hero-tag">⚽ IMENA CHALLENGE</span><h2>Пенальти: сыграй за «Имена»</h2><p>Выбери игрока и пробей пять пенальти. Вратарь соперника угадывает направление. Результаты сохраняются в таблице рекордов этого браузера.</p></div></div>
+    <div class="card character-pick-card"><div class="section-head" style="margin-top:0"><div><h2>Выбери своего персонажа</h2><p>Играй за реального игрока «Имен» и прокачивай его игровой рейтинг</p></div><div class="character-level-chip" id="character-level-chip">УРОВЕНЬ 1</div></div><div id="game-character-grid" class="game-character-grid"></div><div id="selected-character-panel" class="selected-character-panel"></div><p class="source-note">Рейтинг персонажа растёт за игровые достижения в мини-игре, отдельно от официальной статистики лиги. Прогресс сохраняется в этом браузере.</p></div>
+    <div class="grid two-col" style="margin-top:14px">
+      <div class="card"><div class="section-head"><div><h2>Серия пенальти</h2><p>5 ударов · выбери угол удара</p></div></div><div class="game-scoreboard"><div><span>Удары</span><strong id="game-shots">0 / 5</strong></div><div><span>Голы</span><strong id="game-goals">0</strong></div><div><span>Рейтинг</span><strong id="game-best">60</strong></div></div><div class="goal-frame"><div class="goal-targets"><button class="goal-target" data-shot="left">↖<small>ЛЕВО</small></button><button class="goal-target" data-shot="center">↑<small>ЦЕНТР</small></button><button class="goal-target" data-shot="right">↗<small>ПРАВО</small></button></div><div class="goal-net"></div></div><div id="game-feedback" class="tactic-note">Выбери персонажа, начни серию и забивай, чтобы получать опыт.</div><div class="form-row" style="margin-top:12px"><button class="primary-btn" id="game-start" type="button">Начать / новая серия</button></div></div>
+      <div class="card"><div class="section-head"><div><h2>Рейтинг игроков</h2><p>Кто прокачал персонажа сильнее на этом устройстве</p></div></div><div id="game-leaderboard"></div><p class="source-note">Это игровой рейтинг, не рейтинг мастерства в реальном футболе. Пока прогресс локальный и не синхронизируется между посетителями или устройствами.</p><div class="insight"><div class="insight-icon">★</div><div><h3>Задание недели</h3><p>Забей 4 из 5, получи больше опыта и попробуй вывести выбранного игрока в топ игрового рейтинга.</p></div></div></div>
+    </div>
+  </section>
+  <footer class="footer"><span>ИМЕНА · FOOTBALL LAB · 6×6</span><span>Источник данных: публичные страницы лиги «Шесть на шесть»</span><span>Прототип · неофициальный сайт команды</span></footer>
+</main>
+</div>
+
+<div class="modal" id="player-modal" role="dialog" aria-modal="true" aria-label="Карточка игрока"><div class="modal-card"><button class="modal-close" id="modal-close" aria-label="Закрыть">×</button><div id="modal-content"></div></div></div>
+<script>
+const leagueUrl = "https://msk-6x6.ru/tournament/1065992/teams/application?team_id=1543529";
+const defaultPhoto = "https://msk-6x6.ru/_joinpages/img/player_football_photo_640x640.png";
+let players = [
+ {name:"Андреев Иван",games:3,goals:0,assists:0,yellow:1,red:0,id:"10459466"},
+ {name:"Базунов Кирилл",games:2,goals:0,assists:0,yellow:0,red:0},
+ {name:"Бибик Родион",games:1,goals:0,assists:0,yellow:0,red:0,position:"Универсал"},
+ {name:"Богодист Даниил",games:1,goals:0,assists:0,yellow:0,red:0,position:"Нападающий"},
+ {name:"Вит Вячеслав",games:3,goals:2,assists:1,yellow:0,red:0,position:"Полузащитник"},
+ {name:"Жулин Степан",games:3,goals:1,assists:1,yellow:0,red:0,position:"Полузащитник"},
+ {name:"Зайцев Дмитрий",games:6,goals:1,assists:2,yellow:0,red:0},
+ {name:"Клоков Артём",games:3,goals:8,assists:2,yellow:0,red:1,id:"10459469"},
+ {name:"Маркунин Евгений",games:1,goals:0,assists:0,yellow:0,red:0,position:"Полузащитник"},
+ {name:"Матвиенко Никита",games:0,goals:0,assists:0,yellow:0,red:0,position:"Полузащитник"},
+ {name:"Назаренко Даниил",games:0,goals:0,assists:0,yellow:0,red:0,position:"Защитник"},
+ {name:"Пигарёв Владимир",games:3,goals:1,assists:2,yellow:0,red:0},
+ {name:"Савин Иван",games:1,goals:0,assists:0,yellow:0,red:0,position:"Нападающий"},
+ {name:"Сиденко Константин",games:1,goals:0,assists:0,yellow:0,red:0},
+ {name:"Сингх Арян",games:0,goals:0,assists:0,yellow:0,red:0,position:"Нападающий"},
+ {name:"Трофимчук Вадим",games:1,goals:0,assists:0,yellow:0,red:0,position:"Универсал"},
+ {name:"Факалы Пётр",games:0,goals:0,assists:0,yellow:0,red:0,position:"Защитник"},
+ {name:"Филиппов Максим",games:4,goals:1,assists:0,yellow:1,red:0,position:"Полузащитник"},
+ {name:"Щербань Вадим",games:4,goals:0,assists:0,yellow:0,red:0,position:"Полузащитник"},
+ {name:"Щуренков Антон",games:2,goals:0,assists:0,yellow:0,red:0},
+ {name:"Захаров Николай",games:5,goals:4,assists:2,yellow:0,red:0,position:"Нападающий",id:"10220221",photo:"https://st.joinsport.io/player/10220221/photo/697534b931810_640x640.jpg"},
+ {name:"Бережков Максим",games:3,goals:1,assists:0,yellow:0,red:0,position:"Нападающий"}
+];
+let leagueTable = [];
+let leagueScorers = [];
+let matches = [
+ {date:"18 окт · 16:00",opponent:"Underdogs",for:2,against:3,venue:"7 сезон · тур 7"},
+ {date:"11 окт · 20:00",opponent:"Эдельвейс",for:6,against:3,venue:"7 сезон · тур 6"},
+ {date:"04 окт · 15:30",opponent:"Jamaica X",for:0,against:8,venue:"7 сезон · тур 5"},
+ {date:"26 сен · 19:00",opponent:"Роза",for:2,against:6,venue:"7 сезон · тур 4"},
+ {date:"20 сен · 22:00",opponent:"Slowmo москва",for:1,against:17,venue:"7 сезон · тур 3"},
+ {date:"13 сен · 13:00",opponent:"Paradox москва",for:3,against:6,venue:"7 сезон · тур 2"},
+ {date:"06 сен · 20:00",opponent:"Хаос",for:5,against:8,venue:"7 сезон · тур 1"}
+];
+function result(m){return m.for>m.against?"win":m.for===m.against?"draw":"loss"}
+function resultText(m){return m.for>m.against?"ПОБЕДА":m.for===m.against?"НИЧЬЯ":"ПОРАЖЕНИЕ"}
+function initials(name){return name.split(" ").slice(0,2).map(x=>x[0]||"").join("").toUpperCase()}
+
+/* Portraits supplied by the club: explicit name-to-file mapping. */
+const CLUB_PLAYER_PHOTOS = {
+  "Бибик Родион": "assets/players/player-01.jpg",
+  "Богодист Даниил": "assets/players/player-02.jpg",
+  "Жулин Степан": "assets/players/player-03.jpg",
+  "Маркунин Евгений": "assets/players/player-04.jpg",
+  "Матвиенко Никита": "assets/players/player-05.jpg",
+  "Назаренко Даниил": "assets/players/player-06.jpg",
+  "Савин Иван": "assets/players/player-07.jpg",
+  "Сингх Арян": "assets/players/player-08.jpg",
+  "Трофимчук Вадим": "assets/players/player-09.jpg",
+  "Факалы Пётр": "assets/players/player-10.jpg"
+};
+function clubPhotoForPlayer(player) {
+  const raw = String(player?.name || "").trim().replace(/\s+/g, " ");
+  const norm = s => s.toLocaleLowerCase("ru-RU");
+  const key = Object.keys(CLUB_PLAYER_PHOTOS).find(k => norm(k) === norm(raw));
+  if (key) return CLUB_PLAYER_PHOTOS[key];
+  const reversed = raw.split(" ").reverse().join(" ");
+  const reverseKey = Object.keys(CLUB_PLAYER_PHOTOS).find(k => norm(k) === norm(reversed));
+  return reverseKey ? CLUB_PLAYER_PHOTOS[reverseKey] : (player?.photo || "");
+}
+
+function avatar(p,cls="avatar"){
+ const photo=String(clubPhotoForPlayer(p)||"").trim();
+ const label=String(p?.name||"Игрок").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
+ const initials=label.split(/\s+/).slice(0,2).map(s=>s[0]||"").join("").toUpperCase();
+ if(!photo)return `<span class="${cls} avatar-fallback" role="img" aria-label="Фото игрока ${label}">${initials}</span>`;
+ return `<img class="${cls}" src="${photo}" alt="${label}" loading="lazy" referrerpolicy="no-referrer" onerror="this.onerror=null;this.outerHTML='<span class=&quot;${cls} avatar-fallback&quot;>${initials}</span>'">`;
+}
+function playerCard(p){return `<article class="card player-card" data-player="${p.name}"><div class="player-cover"></div><div class="player-card-top">${avatar(p)}</div><div class="player-card-body"><h3>${p.name}</h3><div class="player-meta">${p.position||"Игрок команды"} · ${p.games} матч${p.games===1?"":p.games>1&&p.games<5?"а":"ей"}</div><div class="player-numbers"><div><span>Голы</span><strong>${p.goals}</strong></div><div><span>Пасы</span><strong>${p.assists}</strong></div><div><span>Г+П</span><strong>${p.goals+p.assists}</strong></div></div></div></article>`}
+function matchCard(m){const r=result(m);return `<div class="match"><div class="match-date">${m.date}</div><div><div class="match-teams">Имена <span style="color:var(--muted);font-weight:500">—</span> ${m.opponent}</div><div class="match-sub">${m.venue}</div></div><div class="score">${m.for} : ${m.against}<span class="result-tag ${r}">${resultText(m)}</span></div></div>`}
+function stat(label,value,foot,symbol,cls=""){return `<div class="card"><div class="stat-head"><span>${label}</span><span class="stat-symbol">${symbol}</span></div><div class="stat-value ${cls}">${value}</div><div class="stat-foot">${foot}</div></div>`}
+function renderOverview(){
+ const wins=matches.filter(m=>result(m)==="win").length,draws=matches.filter(m=>result(m)==="draw").length,losses=matches.length-wins-draws;
+ const gf=matches.reduce((s,m)=>s+m.for,0),ga=matches.reduce((s,m)=>s+m.against,0);
+ const heroPlayed=document.getElementById("hero-played");if(heroPlayed)heroPlayed.textContent=`${matches.length} сыграно`;
+ const heroSquad=document.getElementById("hero-squad");if(heroSquad)heroSquad.textContent=`${players.length} игрока`;
+ document.getElementById("team-stats").innerHTML=[
+ stat("Победы",wins,"из "+matches.length+" матчей","↗","positive"),
+ stat("Забито голов",gf,(gf/matches.length).toFixed(1).replace(".",",")+" в среднем за матч","⚽"),
+ stat("Пропущено",ga,(ga/matches.length).toFixed(1).replace(".",",")+" в среднем за матч","◉","negative"),
+ stat("Разница голов",gf-ga,"голы забитые − пропущенные","±",gf-ga>=0?"positive":"negative")
+ ].join("");
+ document.getElementById("recent-matches").innerHTML=matches.slice(0,3).map(matchCard).join("");
+ document.getElementById("leaders").innerHTML=[...players].sort((a,b)=>b.goals-a.goals).slice(0,3).map(playerCard).join("");
+ document.getElementById("insights").innerHTML=`
+ <div class="insight"><div class="insight-icon">↗</div><div><h3>Атака: есть точка роста</h3><p>В ${matches.length} матчах забито ${gf} голов. Отслеживайте, какие комбинации и игроки создают голевые моменты.</p></div></div>
+ <div class="insight"><div class="insight-icon">⌁</div><div><h3>Оборона требует разбора</h3><p>Пропущено ${ga} голов. Размечайте голы по типу эпизода: потеря, контратака, стандарт или позиционная атака.</p></div></div>
+ <div class="insight"><div class="insight-icon">◷</div><div><h3>Следующий шаг — данные по минутам</h3><p>Добавьте время голов и замен, чтобы понять, как меняется игра на протяжении 50 минут.</p></div></div>`;
+}
+function renderPlayers(){
+ const q=(document.getElementById("player-search").value||"").toLowerCase();
+ const sort=document.getElementById("sort-players").value;
+ const arr=players.filter(p=>p.name.toLowerCase().includes(q)).sort((a,b)=>sort==="name"?a.name.localeCompare(b.name,"ru"):b[sort]-a[sort]);
+ document.getElementById("player-grid").innerHTML=arr.length?arr.map(playerCard).join(""):'<div class="empty">Игроки не найдены</div>';
+ document.getElementById("player-grid").querySelectorAll(".player-card").forEach(el=>el.addEventListener("click",()=>showPlayer(players.find(p=>p.name===el.dataset.player))));
+}
+let weekFilter = "all";
+function weekDateCutoff(){const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-6);return d;}
+function weekData(p){
+ const cutoff=weekDateCutoff();
+ const log=Array.isArray(p.match_log)?p.match_log:[];
+ const recent=log.filter(m=>{if(!m.date)return false;const d=new Date(m.date+"T12:00:00");return !Number.isNaN(d.getTime())&&d>=cutoff&&d<=new Date();});
+ const goals=recent.reduce((n,m)=>n+(Number(m.goals)||0),0);
+ const assists=recent.reduce((n,m)=>n+(Number(m.assists)||0),0);
+ const yellow=recent.reduce((n,m)=>n+(Number(m.yellow)||0),0);
+ const red=recent.reduce((n,m)=>n+(Number(m.red)||0),0);
+ const played=recent.length;
+ const raw=82+goals*2+assists*1.5+played*.5-yellow-red*3;
+ const rating=Math.max(82,Math.min(90,Math.round(raw)));
+ return {recent,goals,assists,yellow,red,played,rating,hasAction:goals+assists>0};
+}
+function weeklyPortrait(p){
+ const photo=String(clubPhotoForPlayer(p)||"").trim();
+ const safeName=String(p.name||"Игрок").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+ return `<div class="week-photo">${photo?`<img src="${photo}" alt="${safeName}" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.display='none';this.nextElementSibling.style.display='grid'">`:""}<div class="goat-fallback" style="${photo?'display:none':''}">GOAT</div></div>`;
+}
+function weeklyCard(p){
+ const w=weekData(p);
+ const badge=w.goals>0&&w.assists>0?"GOAL + ASSIST":w.goals>0?"GOALSCORER":w.assists>0?"PLAYMAKER":w.played>0?"MATCH WEEK":"BASE CARD";
+ return `<article class="week-card" data-week-player="${String(p.name).replace(/"/g,"&quot;")}"><div class="week-card-head"><div class="week-rating">${w.rating}</div><div class="week-label">ИМЕНА<br>WEEKLY RATING</div></div>${weeklyPortrait(p)}<div class="week-player-name">${p.name}</div><div class="week-position">${p.position||"Игрок команды"}</div><div class="week-stats"><div><span>Голы</span><strong>${w.goals}</strong></div><div><span>Ассисты</span><strong>${w.assists}</strong></div><div><span>Матчи</span><strong>${w.played}</strong></div></div><div class="week-card-foot"><span>${w.yellow?`🟨 ${w.yellow} `:""}${w.red?`🟥 ${w.red}`:""}${!w.played?"Нет матчей за период":"За 7 дней"}</span><span class="week-badge">${badge}</span></div></article>`;
+}
+function renderWeeklyCards(){
+ const decorated=players.map(p=>({p,w:weekData(p)}));
+ const shown=decorated.filter(x=>weekFilter==="active"?x.w.played>0:weekFilter==="scorers"?x.w.hasAction:true).sort((a,b)=>b.w.rating-a.w.rating||((b.w.goals+b.w.assists)-(a.w.goals+a.w.assists))||a.p.name.localeCompare(b.p.name,"ru"));
+ const el=document.getElementById("week-grid");
+ if(el)el.innerHTML=shown.length?shown.map(x=>weeklyCard(x.p)).join(""):'<div class="empty">Нет игроков для выбранного фильтра</div>';
+ const cutoff=weekDateCutoff().toLocaleDateString("ru-RU",{day:"numeric",month:"short"});
+ const now=new Date().toLocaleDateString("ru-RU",{day:"numeric",month:"short"});
+ const active=decorated.filter(x=>x.w.played>0).length;
+ const scorer=decorated.filter(x=>x.w.hasAction).length;
+ const summary=document.getElementById("week-summary");if(summary)summary.textContent=`${players.length} игроков · ${active} играли за период · ${scorer} с голами/ассистами · ${cutoff} — ${now}`;
+ document.querySelectorAll("#week-filters .pill").forEach(b=>b.classList.toggle("active",b.dataset.weekFilter===weekFilter));
+ el?.querySelectorAll(".week-card").forEach(card=>card.addEventListener("click",()=>showPlayer(players.find(p=>p.name===card.dataset.weekPlayer))));
+}
+
+function renderMatches(filter="all"){
+ const arr=matches.filter(m=>filter==="all"||result(m)===filter);
+ document.getElementById("all-matches").innerHTML=arr.map(matchCard).join("");
+ document.querySelectorAll("#match-filters .pill").forEach(b=>b.classList.toggle("active",b.dataset.filter===filter));
+}
+function renderOpponents(){
+ const gf=matches.reduce((s,m)=>s+m.for,0),ga=matches.reduce((s,m)=>s+m.against,0);
+ document.getElementById("opponent-stats").innerHTML=[
+ stat("Соперников",new Set(matches.map(m=>m.opponent)).size,"в текущем сезоне","◎"),
+ stat("Средний счёт", (gf/matches.length).toFixed(1).replace(".",",")+" : "+(ga/matches.length).toFixed(1).replace(".",","),"голы за матч","⚽"),
+ stat("Лучший матч","6 : 3","победа над «Эдельвейсом»","✦","positive"),
+ stat("Сухие матчи",matches.filter(m=>m.against===0).length,"без пропущенных голов","◉")
+ ].join("");
+ document.getElementById("opponent-table").innerHTML=matches.map(m=>`<tr><td><strong>${m.opponent}</strong></td><td>${m.for} : ${m.against}</td><td class="${result(m)}">${resultText(m)}</td><td>${m.for}</td><td>${m.against}</td></tr>`).join("");
+}
+function showPlayer(p){
+ if(!p)return;
+ document.getElementById("modal-content").innerHTML=`<div class="modal-profile">${avatar(p)}<div><div class="eyebrow">Игрок команды «Имена»</div><h2>${p.name}</h2><div class="subline">${p.position||"Амплуа не указано"} · ${p.games} матчей в показанной статистике</div>${p.id?`<a class="link-btn" style="display:inline-block;padding-left:0" target="_blank" rel="noreferrer" href="https://msk-6x6.ru/player/${p.id}">Профиль на сайте лиги ↗</a>`:""}</div></div><div class="modal-stats"><div><small>Голы</small><strong>${p.goals}</strong></div><div><small>Передачи</small><strong>${p.assists}</strong></div><div><small>Голы + передачи</small><strong>${p.goals+p.assists}</strong></div></div><div class="insight"><div class="insight-icon">✓</div><div><h3>Что можно улучшить в анализе</h3><p>Добавьте игровое время, удары, потери и отборы — тогда можно будет оценивать вклад игрока шире, чем по голам и передачам.</p></div></div><p class="source-note">Данные на карточке — снимок статистики из открытой страницы заявки лиги, а не автоматическое обновление.</p>`;
+ document.getElementById("player-modal").classList.add("open");
+}
+
+const formations = {
+ "2-2-1": {label:"2–2–1 · баланс",desc:"Сбалансированная структура. Две пары поддерживают друг друга; нападающий открывается за спину и помогает начинать прессинг.",slots:[{role:"Защитник",x:34,y:31},{role:"Защитник",x:66,y:31},{role:"Полузащитник",x:34,y:59},{role:"Полузащитник",x:66,y:59},{role:"Нападающий",x:50,y:82}]},
+ "1-3-1": {label:"1–3–1 · контроль центра",desc:"Три игрока в средней линии дают больше вариантов короткого паса. Единственный защитник не должен оставаться один на один после потери.",slots:[{role:"Защитник",x:50,y:30},{role:"Полузащитник",x:22,y:54},{role:"Полузащитник",x:50,y:59},{role:"Полузащитник",x:78,y:54},{role:"Нападающий",x:50,y:82}]},
+ "2-1-2": {label:"2–1–2 · два впереди",desc:"Два атакующих игрока растягивают оборону. Центральный полузащитник обязан предлагать пас и закрывать центр при потере.",slots:[{role:"Защитник",x:34,y:31},{role:"Защитник",x:66,y:31},{role:"Полузащитник",x:50,y:53},{role:"Нападающий",x:30,y:79},{role:"Нападающий",x:70,y:79}]},
+ "3-1-1": {label:"3–1–1 · компактная оборона",desc:"Три игрока ниже уменьшают пространство перед воротами. После отбора первый пас направлять в свободную зону, а не выносить без адреса.",slots:[{role:"Защитник",x:24,y:31},{role:"Защитник",x:50,y:34},{role:"Защитник",x:76,y:31},{role:"Полузащитник",x:50,y:59},{role:"Нападающий",x:50,y:82}]},
+ "1-2-2": {label:"1–2–2 · высокий прессинг",desc:"Два игрока начинают давление на первой передаче. Если соперник выходит из прессинга, средняя линия должна быстро возвращаться за мяч.",slots:[{role:"Защитник",x:50,y:30},{role:"Полузащитник",x:33,y:53},{role:"Полузащитник",x:67,y:53},{role:"Нападающий",x:33,y:79},{role:"Нападающий",x:67,y:79}]}
+};
+function playerImpact(p){const g=Number(p.goals)||0,a=Number(p.assists)||0,n=Number(p.games)||0;return (g*3+a*2)/Math.max(1,n)+Math.min(n,5)*0.12;}
+function roleFit(p,role){const pos=(p.position||"").toLowerCase();if(!pos)return 0;if(role==="Защитник"&&/защит/.test(pos))return 2.2;if(role==="Полузащитник"&&/полузащит|универсал/.test(pos))return 2.2;if(role==="Нападающий"&&/напада/.test(pos))return 2.2;if(/универсал/.test(pos))return 0.8;return -0.7;}
+function renderFormation(){
+ const id=document.getElementById("formation-select").value, f=formations[id], board=document.getElementById("formation-board");
+ board.innerHTML='<div class="center-circle"></div>';
+ const keeper=document.getElementById("keeper-select").value;
+ board.insertAdjacentHTML("beforeend",`<div class="formation-dot keeper" style="left:50%;top:13%">ВР<small>${keeper?escapeHtml(keeper):"Вратарь?"}</small></div>`);
+ f.slots.forEach((slot,i)=>board.insertAdjacentHTML("beforeend",`<div class="formation-dot" style="left:${slot.x}%;top:${slot.y}%">${slot.role==="Защитник"?"ЗЩ":slot.role==="Полузащитник"?"ПЗ":"НП"}<small>${slot.role}</small></div>`));
+ document.getElementById("formation-summary").innerHTML=`<strong>${f.label}</strong><br>${f.desc}`;
+ document.querySelectorAll(".formation-card").forEach(b=>b.classList.toggle("active",b.dataset.formation===id));
+}
+function escapeHtml(value){return String(value).replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));}
+function buildRecommendation(){
+ const formationId=document.getElementById("formation-select").value, f=formations[formationId], plan=document.getElementById("game-plan").value, keeperName=document.getElementById("keeper-select").value, opp=document.getElementById("opponent-select").value;
+ const keeper=players.find(p=>p.name===keeperName);
+ const pool=players.filter(p=>p.name!==keeperName);
+ const selected=[];
+ f.slots.forEach(slot=>{
+   const available=pool.filter(p=>!selected.some(x=>x.p.name===p.name)).map(p=>({p,score:playerImpact(p)+roleFit(p,slot.role)})).sort((a,b)=>b.score-a.score);
+   if(available.length)selected.push({p:available[0].p,role:slot.role,score:available[0].score});
+ });
+ const roleMarkup=selected.map((x,i)=>`<div class="lineup-role"><div class="role-number">${String(i+1).padStart(2,"0")}</div><div><strong>${escapeHtml(x.p.name)}</strong><small>${x.role}${x.p.position?" · амплуа в данных: "+escapeHtml(x.p.position):" · амплуа не указано"} · ${x.p.games||0} матчей</small></div><div class="role-score">${(x.p.goals||0)}Г · ${(x.p.assists||0)}П</div></div>`).join("");
+ const plans={balanced:["Баланс линий","Не поднимать обоих защитников одновременно. При владении один поддерживает атаку, второй остаётся за мячом."],press:["Прессинг по сигналу","Начинайте давление на плохом приёме или пасе назад. Ближайший закрывает мяч, второй игрок перекрывает передачу в центр — не бегите все на одного."],counter:["Быстрый выход","После отбора ищите первый пас вперёд или в свободный фланг. Один игрок открывается глубоко, остальные поддерживают пас, чтобы не потерять мяч сразу."],lead:["Защита преимущества","Сохраняйте компактность и владение, не отдавайте мяч рискованно через центр. Один игрок всегда страхует за атакой."],chase:["Отыгрываться без хаоса","Поднимите одного игрока выше и ускоряйте розыгрыш, но назначьте конкретного страхующего. Не превращайте каждую атаку в дальний пас."]};
+ const advice=plans[plan];
+ let opponentNote="Выбери соперника, чтобы посмотреть наш результат против него.";
+ if(opp){const against=matches.filter(m=>m.opponent===opp);if(against.length){const m=against[0];opponentNote=`Против ${opp}: в сохранённых данных ${m.for}:${m.against}. ${m.against>=6?"Мы пропустили много — приоритет компактности и страховки после потери.":m.for===0?"Не удалось забить — попробуйте чаще создавать вариант короткого паса и выводить игрока на удар.":m.for>m.against?"Мы уже забивали больше соперника — сохраняйте сильные стороны, но не раскрывайтесь без необходимости.":"Результат был близким/неудачным — начинайте с компактной структуры и меняйте прессинг по реакции соперника."} Это вывод по одному сохранённому результату, а не полный скаутинг соперника.`;}}
+ const keeperMarkup=keeper?`<div class="lineup-role"><div class="role-number">ВР</div><div><strong>${escapeHtml(keeper.name)}</strong><small>Вратарь выбран вручную</small></div><div class="role-score">Назначен</div></div>`:`<div class="advice-item"><strong>Нужно назначить вратаря</strong><p>В доступной статистике нет надёжного признака, кто играет в воротах. Выбери его в поле «Вратарь» — программа не будет назначать эту роль наугад.</p></div>`;
+ document.getElementById("lineup-recommendation").innerHTML=keeperMarkup+roleMarkup+`<p class="source-note">Основа рассчитана эвристически по голам, передачам, числу матчей и совпадению указанного амплуа. Это предварительный вариант: перед игрой учитывайте доступность игроков и текущую форму.</p>`;
+ document.getElementById("match-advice").innerHTML=`<div class="advice-item"><strong>${advice[0]}</strong><p>${advice[1]}</p></div><div class="advice-item"><strong>Схема: ${f.label}</strong><p>${f.desc}</p></div><div class="advice-item"><strong>Данные по сопернику</strong><p>${opponentNote}</p></div>`;
+ renderFormation();
+}
+function syncTacticsOptions(){
+ const opp=document.getElementById("opponent-select"),keeper=document.getElementById("keeper-select");
+ if(!opp||!keeper)return;
+ const oldOpp=opp.value,oldKeeper=keeper.value;
+ opp.innerHTML='<option value="">Общая рекомендация</option>';
+ [...new Set(matches.map(m=>m.opponent))].forEach(name=>opp.insertAdjacentHTML("beforeend",`<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`));
+ keeper.innerHTML='<option value="">Не выбран — назначьте перед матчем</option>';
+ players.slice().sort((a,b)=>a.name.localeCompare(b.name,"ru")).forEach(p=>keeper.insertAdjacentHTML("beforeend",`<option value="${escapeHtml(p.name)}">${escapeHtml(p.name)}</option>`));
+ if([...opp.options].some(o=>o.value===oldOpp))opp.value=oldOpp;
+ if([...keeper.options].some(o=>o.value===oldKeeper))keeper.value=oldKeeper;
+}
+function initTactics(){
+ syncTacticsOptions();
+ const opp=document.getElementById("opponent-select"), keeper=document.getElementById("keeper-select");
+ document.getElementById("formation-select").addEventListener("change",()=>{renderFormation();buildRecommendation()});
+ document.getElementById("game-plan").addEventListener("change",buildRecommendation);
+ document.getElementById("opponent-select").addEventListener("change",buildRecommendation);
+ keeper.addEventListener("change",()=>{renderFormation();buildRecommendation()});
+ document.getElementById("recommend-lineup").addEventListener("click",buildRecommendation);
+ document.querySelectorAll(".formation-card").forEach(b=>b.addEventListener("click",()=>{document.getElementById("formation-select").value=b.dataset.formation;renderFormation();buildRecommendation()}));
+ renderFormation();
+}
+function safeText(value){return String(value??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;", "'":"&#39;"}[ch]));}
+function renderLeague(){
+ const body=document.getElementById("league-table-body"), scorersBody=document.getElementById("league-scorers-body");
+ const mine=leagueTable.find(t=>(t.team||"").toLocaleLowerCase("ru-RU")==="имена");
+ document.getElementById("league-position").textContent=mine?`${mine.position}-е`:"—";
+ document.getElementById("league-points").textContent=mine?(mine.points??"—"):"—";
+ document.getElementById("scorer-count").textContent=leagueScorers.length?`${leagueScorers.length} игроков`:"—";
+ body.innerHTML=leagueTable.length?[...leagueTable].sort((a,b)=>(a.position||999)-(b.position||999)).map(t=>`<tr class="${(t.team||"").toLocaleLowerCase("ru-RU")==="имена"?'my-team-row':''}"><td>${t.position??"—"}</td><td><strong>${safeText(t.team)}</strong></td><td>${t.played??"—"}</td><td>${t.wins??"—"}</td><td>${t.draws??"—"}</td><td>${t.losses??"—"}</td><td>${t.gf==null||t.ga==null?"—":`${t.gf}–${t.ga}`}</td><td>${t.gd==null?"—":(t.gd>0?"+":"")+t.gd}</td><td><strong>${t.points??"—"}</strong></td></tr>`).join(""):'<tr><td colspan="9">Таблица пока недоступна. Запусти сервер и нажми «Обновить с сайта».</td></tr>';
+ scorersBody.innerHTML=leagueScorers.length?[...leagueScorers].sort((a,b)=>(a.rank||999)-(b.rank||999)).slice(0,50).map(t=>`<tr class="${(t.team||"").toLocaleLowerCase("ru-RU")==="имена"?'my-team-row':''}"><td>${t.rank??"—"}</td><td><strong>${safeText(t.player)}</strong></td><td>${safeText(t.team)}</td><td>${t.games??"—"}</td><td><strong>${t.goals??0}</strong></td><td>${t.goals_per_game??"—"}</td></tr>`).join(""):'<tr><td colspan="6">Бомбардиры пока недоступны. Запусти сервер и обнови данные.</td></tr>';
+}
+function renderGoals(){
+ const mine=leagueTable.find(t=>(t.team||"").toLocaleLowerCase("ru-RU")==="имена");
+ const sorted=[...leagueTable].sort((a,b)=>(a.position||999)-(b.position||999));
+ if(!mine){document.getElementById("goal-stats").innerHTML=stat("Позиция","—","Нет данных таблицы","#")+stat("Очки","—","Нет данных таблицы","★")+stat("Цель","Уточнить","Нужна таблица лиги","🎯");document.getElementById("season-goals").innerHTML='<div class="insight"><div class="insight-icon">!</div><div><h3>Не удалось получить таблицу</h3><p>Обнови данные с сайта лиги, чтобы цели были основаны на реальном положении команд.</p></div></div>';document.getElementById("goal-rivals").innerHTML="";return;}
+ const index=sorted.findIndex(t=>(t.team||"").toLocaleLowerCase("ru-RU")==="имена");
+ const above=sorted[index-1], below=sorted[index+1];
+ const played=Number(mine.played)||matches.length; const remaining=Math.max(0,9-played); const maxPoints=(Number(mine.points)||0)+remaining*3;
+ const targetPoints=above?Number(above.points)||0:0; const gap=above?Math.max(0,targetPoints-(Number(mine.points)||0)):0;
+ document.getElementById("goal-stats").innerHTML=[stat("Место в лиге",`${mine.position??index+1} / ${sorted.length}`,"Текущая позиция «Имен»","#","negative"),stat("Очки",mine.points??0,`${played} матчей сыграно` ,"★"),stat("Матчи до конца основы",remaining,remaining===1?"ещё один тур":remaining===0?"регулярная часть завершена":"по календарю сезона","◷")].join("");
+ const near=above?(gap===0?`С ${above.team} одинаковое количество очков.`:`До ${above.team} — ${gap} очк${gap===1?"о":gap>=2&&gap<=4?"а":"ов"}.`):"Команда наверху таблицы.";
+ const realistic=remaining>0?(gap===0?`Очки равны: решающими будут результат ближайших матчей и разница мячей. Максимум до конца регулярной части — ещё ${remaining*3} очков.`:gap<=remaining*3?`Обгон ближайшего соперника математически возможен: нужно отыграть ${gap} очк. за ${remaining} матч(а).`:`Обогнать ${above.team} в регулярной части уже малореалистично: отставание ${gap} очк., а максимум осталось набрать ${remaining*3}.`):"Регулярные матчи завершены: фокус на подтверждённых правилах плей-офф и подготовке к следующему этапу.";
+ const goalItems=[
+  ["Цель №1 · результат",remaining>0?"Набрать максимум очков в оставшихся матчах":"Закрепить выводы по сезону",remaining>0?`Каждая победа даёт 3 очка; ничья — 1. Максимум доступных очков до конца регулярной части: ${maxPoints}.`:"Сохранить результаты и разобрать повторяющиеся ошибки."],
+  ["Цель №2 · оборона",`Снизить пропущенные мячи ниже ${Math.max(1,Math.ceil((Number(mine.ga)||0)/Math.max(1,played)))} за матч`,"По последним результатам заметна проблема с количеством пропущенных. На тренировке: компактность после потери, страховка последнего игрока и коммуникация в центре."],
+  ["Цель №3 · атака","Забивать минимум 3 гола за матч","Зафиксировать 2–3 повторяемых розыгрыша: выход через стенку, перевод на дальний фланг и быстрый удар после отбора."],
+  ["Цель №4 · дисциплина","Собрать основу и роли до матча","Уточнить вратаря, доступность игроков и роли. Публичные сезонные голы сами по себе не показывают готовность игрока к конкретной игре."]
+ ];
+ document.getElementById("season-goals").innerHTML=`<div class="insight"><div class="insight-icon">🎯</div><div><h3>${safeText(near)}</h3><p>${safeText(realistic)}</p></div></div>`+goalItems.map(g=>`<div class="advice-item"><strong>${g[0]} — ${g[1]}</strong><p>${g[2]}</p></div>`).join("");
+ const rivals=[above,below].filter(Boolean);
+ document.getElementById("goal-rivals").innerHTML=rivals.length?rivals.map(t=>{const d=(Number(t.points)||0)-(Number(mine.points)||0);return `<div class="lineup-role"><div class="role-number">${t.position??"—"}</div><div><strong>${safeText(t.team)}</strong><small>${t.played??"—"} матчей · ${t.points??"—"} очков · ${t.gf==null||t.ga==null?"разница мячей не получена":`${t.gf}–${t.ga}`}</small></div><div class="role-score">${d>0?`+${d}`:d} очк.</div></div>`}).join(""):'<p class="source-note">Соседние команды не найдены.</p>';
+}
+let gameState={shots:0,goals:0,active:false};
+let selectedGameCharacter="";
+let sharedGameProgress={};
+let sharedGameScores=[];
+async function syncGameData(){try{const r=await fetch("/api/game-data",{cache:"no-store"});if(!r.ok)throw new Error("API");const d=await r.json();sharedGameProgress=d.progress||{};sharedGameScores=d.scores||[];try{localStorage.setItem("imenaCharacterProgress",JSON.stringify(sharedGameProgress));localStorage.setItem("imenaPenaltyScores",JSON.stringify(sharedGameScores));}catch(e){}renderGameBoard();}catch(e){try{sharedGameProgress=JSON.parse(localStorage.getItem("imenaCharacterProgress")||"{}");sharedGameScores=JSON.parse(localStorage.getItem("imenaPenaltyScores")||"[]");}catch(err){sharedGameProgress={};sharedGameScores=[];}}}
+function gameProgress(){return sharedGameProgress}
+
+function saveGameProgress(data){sharedGameProgress=data;try{localStorage.setItem("imenaCharacterProgress",JSON.stringify(data))}catch(e){}}
+function characterStats(name){const data=gameProgress()[name]||{xp:0,series:0,goals:0,best:0};const xp=Math.max(0,Number(data.xp)||0);const rating=Math.min(99,60+Math.floor(xp/25));return {...data,xp,rating,level:1+Math.floor(xp/100),progress:(xp%100)/100};}
+function gameScores(){return sharedGameScores}
+function chooseGameCharacter(name){selectedGameCharacter=name;try{localStorage.setItem("imenaSelectedCharacter",name)}catch(e){}renderGameBoard();}
+function renderGameBoard(){
+ if(!players.length)return;
+ if(!selectedGameCharacter||!players.some(p=>p.name===selectedGameCharacter)){try{selectedGameCharacter=localStorage.getItem("imenaSelectedCharacter")||""}catch(e){}if(!players.some(p=>p.name===selectedGameCharacter))selectedGameCharacter=players[0].name;}
+ const progress=gameProgress();
+ const grid=document.getElementById("game-character-grid");
+ if(grid){grid.innerHTML=players.map(p=>{const st=characterStats(p.name);return `<button type="button" class="game-character ${p.name===selectedGameCharacter?'selected':''}" data-character="${safeText(p.name)}" aria-pressed="${p.name===selectedGameCharacter}">${avatar(p)}<strong>${safeText(p.name)}</strong><span class="character-rating">${st.rating}</span><small>УР. ${st.level} · ${st.xp} XP</small><span class="character-xp"><span style="width:${Math.round(st.progress*100)}%"></span></span></button>`}).join("");grid.querySelectorAll("[data-character]").forEach(b=>b.addEventListener("click",()=>chooseGameCharacter(b.dataset.character)));}
+ const p=players.find(x=>x.name===selectedGameCharacter)||players[0];const st=characterStats(p.name);const panel=document.getElementById("selected-character-panel");
+ if(panel)panel.innerHTML=`${avatar(p,'selected-character-portrait')}<div class="selected-character-info"><div class="eyebrow">ТВОЙ ПЕРСОНАЖ · УРОВЕНЬ ${st.level}</div><h3>${safeText(p.name)}</h3><p>${safeText(p.position||'Игрок «Имена»')} · ${st.xp} XP · ${st.series||0} серий сыграно</p><div class="rating-track"><span style="width:${st.rating}%"></span></div><p>Игровой рейтинг <strong style="color:#f5c451">${st.rating}/99</strong> · до следующего уровня ${100-(st.xp%100)} XP</p></div>`;
+ const chip=document.getElementById("character-level-chip");if(chip)chip.textContent=`УР. ${st.level} · ${st.rating} РЕЙТИНГ`;
+ const best=document.getElementById("game-best");if(best)best.textContent=String(st.rating);
+ const list=Object.entries(progress).map(([player,data])=>({player,...data,...characterStats(player)})).sort((a,b)=>b.rating-a.rating||b.xp-a.xp).slice(0,10);
+ document.getElementById("game-leaderboard").innerHTML=list.length?list.map((x,i)=>`<div class="lineup-role"><div class="role-number">${i+1}</div><div><strong>${safeText(x.player)}</strong><small>Ур. ${x.level} · ${x.xp} XP · ${x.series||0} серий</small></div><div class="role-score">${x.rating}/99</div></div>`).join(""):'<p class="source-note">Рейтинг появится после первой сыгранной серии.</p>';
+}
+function startGame(){if(!selectedGameCharacter)chooseGameCharacter(players[0]?.name||"");gameState={shots:0,goals:0,active:true};document.querySelectorAll(".goal-target").forEach(b=>b.disabled=false);document.getElementById("game-shots").textContent="0 / 5";document.getElementById("game-goals").textContent="0";document.getElementById("game-feedback").textContent=`${selectedGameCharacter} выходит на пенальти. Забивай — получай XP и повышай рейтинг!`;}
+function takeShot(direction){if(!gameState.active){document.getElementById("game-feedback").textContent="Нажми «Начать / новая серия», чтобы пробить пять пенальти.";return;}const directions=["left","center","right"],keeper=directions[Math.floor(Math.random()*directions.length)];gameState.shots++;const scored=direction!==keeper;if(scored)gameState.goals++;document.getElementById("game-shots").textContent=`${gameState.shots} / 5`;document.getElementById("game-goals").textContent=gameState.goals;document.getElementById("game-feedback").textContent=scored?`ГОЛ! ${selectedGameCharacter} пробивает ${direction==="left"?"влево":direction==="right"?"вправо":"по центру"}. + очки за точный удар!`:`СЕЙВ! Вратарь угадал направление. Персонаж всё равно получает опыт за участие.`;if(gameState.shots>=5){gameState.active=false;document.querySelectorAll(".goal-target").forEach(b=>b.disabled=true);const progress=gameProgress();const old=progress[selectedGameCharacter]||{xp:0,series:0,goals:0,best:0};const gained=10+gameState.goals*8+(gameState.goals===5?10:0);progress[selectedGameCharacter]={xp:(Number(old.xp)||0)+gained,series:(Number(old.series)||0)+1,goals:(Number(old.goals)||0)+gameState.goals,best:Math.max(Number(old.best)||0,gameState.goals)};saveGameProgress(progress);const st=characterStats(selectedGameCharacter);document.getElementById("game-best").textContent=String(st.rating);document.getElementById("game-feedback").textContent+=` Серия завершена: ${gameState.goals}/5. +${gained} XP! ${st.rating>=99?"Максимальный рейтинг достигнут!":`Новый игровой рейтинг ${st.rating}/99.`}`;const scores=gameScores();scores.push({player:selectedGameCharacter,goals:gameState.goals,date:new Date().toISOString(),xp:gained,rating:st.rating});scores.sort((a,b)=>b.rating-a.rating||b.goals-a.goals||b.date.localeCompare(a.date));try{localStorage.setItem("imenaPenaltyScores",JSON.stringify(scores.slice(0,50)))}catch(e){}renderGameBoard();
+ fetch("/api/game/series",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({player:selectedGameCharacter,goals:gameState.goals,xp:gained})})
+ .then(r=>{if(!r.ok)throw new Error("Не удалось сохранить результат на сервере");return r.json()})
+ .then(d=>{sharedGameProgress=d.progress||{};sharedGameScores=d.scores||[];try{localStorage.setItem("imenaCharacterProgress",JSON.stringify(sharedGameProgress));localStorage.setItem("imenaPenaltyScores",JSON.stringify(sharedGameScores));}catch(e){}renderGameBoard();})
+ .catch(()=>{document.getElementById("game-feedback").textContent+=" Внимание: результат пока сохранён только на этом устройстве — сервер недоступен.";});}}
+
+
+function navigate(page){
+ document.querySelectorAll(".page").forEach(p=>p.classList.toggle("active",p.id==="page-"+page));
+ document.querySelectorAll("#nav button").forEach(b=>b.classList.toggle("active",b.dataset.page===page));
+ const names={overview:"Обзор команды",matches:"Матчи",players:"Игроки",week:"Карточки недели",opponents:"Соперники",tactics:"Тактика и схемы",league:"Таблица и бомбардиры",goals:"Цели сезона",game:"Мини-игра"};
+ document.getElementById("page-title").textContent=names[page]||"ИМЕНА";
+ if(page==="players")renderPlayers();if(page==="week")renderWeeklyCards();if(page==="matches")renderMatches();if(page==="opponents")renderOpponents();if(page==="league")renderLeague();if(page==="goals")renderGoals();if(page==="game")renderGameBoard();
+ window.scrollTo({top:0,behavior:"smooth"});
+}
+document.querySelectorAll("#nav button").forEach(b=>b.addEventListener("click",()=>navigate(b.dataset.page)));
+document.querySelectorAll("[data-go]").forEach(b=>b.addEventListener("click",()=>navigate(b.dataset.go)));
+document.getElementById("player-search").addEventListener("input",renderPlayers);
+document.getElementById("sort-players").addEventListener("change",renderPlayers);
+document.getElementById("match-filters").addEventListener("click",e=>{const b=e.target.closest("button[data-filter]");if(b)renderMatches(b.dataset.filter)});
+document.getElementById("week-filters").addEventListener("click",e=>{const b=e.target.closest("button[data-week-filter]");if(b){weekFilter=b.dataset.weekFilter;renderWeeklyCards()}});
+document.getElementById("modal-close").addEventListener("click",()=>document.getElementById("player-modal").classList.remove("open"));
+document.getElementById("player-modal").addEventListener("click",e=>{if(e.target.id==="player-modal")e.currentTarget.classList.remove("open")});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")document.getElementById("player-modal").classList.remove("open")});
+document.getElementById("export").addEventListener("click",()=>{
+ const data={team:"Имена",season:"7 сезон · 2026",source:leagueUrl,exportedAt:new Date().toISOString(),players,matches,leagueTable,leagueScorers};
+ const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+ const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="imena-football-data.json";a.click();URL.revokeObjectURL(a.href);
+});
+
+function photoSummaryText(data){
+ const p=data&&data.photo_summary;
+ if(!p)return "";
+ const missing=Array.isArray(data.photo_missing_names)?data.photo_missing_names:[];
+ const suffix=missing.length?` · без фото: ${missing.slice(0,5).join(", ")}${missing.length>5?` и ещё ${missing.length-5}`:""}`:"";
+ return ` · фото: ${Number(p.found||0)} найдено, ${Number(p.cached||0)} из кэша, ${Number(p.missing||0)} нет в профиле${suffix}`;
+}
+
+async function loadLiveData(showMessage=false){
+ const status=document.getElementById("sync-status");
+ const refreshButton=document.getElementById("refresh");
+ try{
+   if(showMessage && refreshButton){refreshButton.disabled=true;refreshButton.textContent="Обновляю…";}
+   if(status)status.textContent="Получаю свежую статистику с сайта лиги…";
+   const response=await fetch("/api/data",{cache:"no-store"});
+   if(!response.ok)throw new Error("Сервер аналитики не ответил");
+   const data=await response.json();
+   if(data.players && data.players.length) players=data.players;
+   if(data.matches && data.matches.length) matches=data.matches;
+   if(data.league_table && data.league_table.length) leagueTable=data.league_table;
+   if(data.league_scorers && data.league_scorers.length) leagueScorers=data.league_scorers;
+   syncTacticsOptions();
+   renderOverview(); renderPlayers(); renderMatches(); renderOpponents(); renderWeeklyCards(); renderLeague(); renderGoals(); renderGameBoard();
+   buildRecommendation();
+   const when=data.updated_at ? new Date(data.updated_at).toLocaleString("ru-RU") : "неизвестно";
+   if(status)status.textContent=(data.source_status==="ok"?"✓ Статистика с сайта лиги обновлена":"⚠ Используется последняя сохранённая статистика")+
+     " · "+when+(data.last_error?" · "+data.last_error:"")+(data.league_warning?" · таблица/бомбардиры: "+data.league_warning:"");
+ }catch(err){
+   renderWeeklyCards();
+   if(status)status.textContent="Локальный режим: "+err.message+". Запусти приложение командой python app.py.";
+ }finally{
+   if(showMessage && refreshButton){refreshButton.disabled=false;refreshButton.textContent="↻ Обновить с сайта";}
+ }
+}
+async function refreshFromLeague(){
+ const status=document.getElementById("sync-status"),button=document.getElementById("refresh");
+ button.disabled=true;button.textContent="Обновляю…";
+ try{
+   if(status)status.textContent="Скачиваю заявку, статистику игроков и календарь…";
+   const r=await fetch("/api/refresh",{method:"POST"});
+   const data=await r.json();
+   if(!r.ok)throw new Error(data.error||"Не удалось обновить данные");
+   if(data.players && data.players.length)players=data.players;
+   if(data.matches && data.matches.length)matches=data.matches;
+   syncTacticsOptions();
+   renderOverview();renderPlayers();renderMatches();renderOpponents();renderWeeklyCards();renderLeague();renderGoals();renderGameBoard();
+   buildRecommendation();
+   if(status)status.textContent="✓ Обновлено с сайта лиги · "+new Date(data.updated_at).toLocaleString("ru-RU")+photoSummaryText(data)+(data.warning?" · "+data.warning:"");
+ }catch(e){if(status)status.textContent="Ошибка обновления: "+e.message+" · Проверь подключение к интернету и доступность сайта лиги."}
+ finally{button.disabled=false;button.textContent="↻ Обновить с сайта";}
+}
+document.getElementById("refresh").addEventListener("click",refreshFromLeague);
+document.getElementById("game-start").addEventListener("click",startGame);
+document.querySelectorAll(".goal-target").forEach(b=>b.addEventListener("click",()=>takeShot(b.dataset.shot)));
+initTactics();
+buildRecommendation();
+loadLiveData();
+syncGameData();
+setInterval(()=>loadLiveData(false),5*60*1000);
+
+renderOverview();
+renderWeeklyCards();
+document.getElementById("hero-squad").textContent=`${players.length} игрока`;
+renderLeague();renderGoals();renderGameBoard();
+</script>
+</body>
+</html>
