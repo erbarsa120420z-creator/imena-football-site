@@ -1,18 +1,32 @@
+
 from __future__ import annotations
+
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
-import json
 import os
 import sqlite3
 
+import requests
 from flask import Flask, jsonify, request, send_from_directory
 from scraper import load_cache, refresh_data
+
 
 ROOT = Path(__file__).resolve().parent
 DATA_DIR = Path(os.environ.get("IMENA_DATA_DIR", str(ROOT / "data")))
 DATA_DIR.mkdir(parents=True, exist_ok=True)
-DB_PATH = Path(os.environ.get("IMENA_DB_PATH", str(DATA_DIR / "imena.sqlite3")))
+
+DB_PATH = Path(
+    os.environ.get("IMENA_DB_PATH", str(DATA_DIR / "imena.sqlite3"))
+)
+
+TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
+SITE_URL = "https://imena-football-site.onrender.com"
+WEBHOOK_URL = f"{SITE_URL}/telegram-webhook"
+
 app = Flask(__name__, static_folder=str(ROOT), static_url_path="")
+
+
+# ---------------- DATABASE ----------------
 
 def db():
     conn = sqlite3.connect(DB_PATH, timeout=15)
@@ -21,51 +35,76 @@ def db():
     conn.execute("PRAGMA busy_timeout=15000")
     return conn
 
+
 def init_db():
     with db() as conn:
-        conn.execute("""CREATE TABLE IF NOT EXISTS player_progress (
-            player TEXT PRIMARY KEY,
-            xp INTEGER NOT NULL DEFAULT 0,
-            series INTEGER NOT NULL DEFAULT 0,
-            goals INTEGER NOT NULL DEFAULT 0,
-            best INTEGER NOT NULL DEFAULT 0,
-            updated_at TEXT NOT NULL
-        )""")
-        conn.execute("""CREATE TABLE IF NOT EXISTS game_scores (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            player TEXT NOT NULL,
-            goals INTEGER NOT NULL,
-            xp INTEGER NOT NULL,
-            rating INTEGER NOT NULL,
-            created_at TEXT NOT NULL
-        )""")
-        conn.execute("CREATE INDEX IF NOT EXISTS idx_game_scores_created ON game_scores(created_at DESC)")
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS player_progress (
+                player TEXT PRIMARY KEY,
+                xp INTEGER NOT NULL DEFAULT 0,
+                series INTEGER NOT NULL DEFAULT 0,
+                goals INTEGER NOT NULL DEFAULT 0,
+                best INTEGER NOT NULL DEFAULT 0,
+                updated_at TEXT NOT NULL
+            )
+        """)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS game_scores (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                player TEXT NOT NULL,
+                goals INTEGER NOT NULL,
+                xp INTEGER NOT NULL,
+                rating INTEGER NOT NULL,
+                created_at TEXT NOT NULL
+            )
+        """)
+        conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_game_scores_created
+            ON game_scores(created_at DESC)
+        """)
+
+
 init_db()
+
+
+# ---------------- WEBSITE ----------------
 
 @app.get("/")
 def index():
     return send_from_directory(ROOT, "index.html")
 
+
 @app.get("/api/data")
 def api_data():
     data = load_cache()
     stale = True
+
     if data.get("updated_at"):
         try:
-            stamp = datetime.fromisoformat(data["updated_at"].replace("Z", "+00:00"))
-            stale = datetime.now(timezone.utc) - stamp > timedelta(minutes=30)
+            stamp = datetime.fromisoformat(
+                data["updated_at"].replace("Z", "+00:00")
+            )
+            stale = (
+                datetime.now(timezone.utc) - stamp
+                > timedelta(minutes=30)
+            )
         except Exception:
             stale = True
+
     if not data.get("players") or not data.get("matches") or stale:
         try:
             data = refresh_data()
         except Exception as exc:
             cached = load_cache()
+
             if cached.get("players") or cached.get("matches"):
                 cached["last_error"] = str(exc)
                 return jsonify(cached)
+
             return jsonify({"error": str(exc), **cached}), 503
+
     return jsonify(data)
+
 
 @app.post("/api/refresh")
 def api_refresh():
@@ -74,94 +113,188 @@ def api_refresh():
     except Exception as exc:
         return jsonify({"error": str(exc), **load_cache()}), 502
 
+
+# ---------------- GAME STATISTICS ----------------
+
 @app.get("/api/game-data")
 def api_game_data():
     with db() as conn:
-        progress = {r["player"]: {k: r[k] for k in ("xp", "series", "goals", "best")} for r in conn.execute("SELECT * FROM player_progress")}
-        scores = [dict(r) for r in conn.execute("SELECT player, goals, xp, rating, created_at AS date FROM game_scores ORDER BY rating DESC, goals DESC, created_at DESC LIMIT 50")]
+        progress = {
+            row["player"]: {
+                key: row[key]
+                for key in ("xp", "series", "goals", "best")
+            }
+            for row in conn.execute("SELECT * FROM player_progress")
+        }
+
+        scores = [
+            dict(row)
+            for row in conn.execute("""
+                SELECT player, goals, xp, rating,
+                       created_at AS date
+                FROM game_scores
+                ORDER BY rating DESC, goals DESC, created_at DESC
+                LIMIT 50
+            """)
+        ]
+
     return jsonify({"progress": progress, "scores": scores})
+
 
 @app.post("/api/game/series")
 def api_game_series():
     payload = request.get_json(silent=True) or {}
     player = str(payload.get("player", "")).strip()
+
     if not player or len(player) > 120:
         return jsonify({"error": "Не указано имя игрока"}), 400
+
     try:
         goals = int(payload.get("goals", -1))
         xp = int(payload.get("xp", -1))
     except (TypeError, ValueError):
         return jsonify({"error": "Некорректные результаты"}), 400
+
     if not 0 <= goals <= 5 or not 0 <= xp <= 100:
         return jsonify({"error": "Результат вне допустимого диапазона"}), 400
+
     now = datetime.now(timezone.utc).isoformat()
+
     with db() as conn:
-        conn.execute("""INSERT INTO player_progress(player,xp,series,goals,best,updated_at)
-            VALUES(?,?,1,?,?,?)
+        conn.execute("""
+            INSERT INTO player_progress
+                (player, xp, series, goals, best, updated_at)
+            VALUES (?, ?, 1, ?, ?, ?)
             ON CONFLICT(player) DO UPDATE SET
-              xp=player_progress.xp+excluded.xp,
-              series=player_progress.series+1,
-              goals=player_progress.goals+excluded.goals,
-              best=MAX(player_progress.best,excluded.best),
-              updated_at=excluded.updated_at""", (player, xp, goals, goals, now))
-        row = conn.execute("SELECT xp FROM player_progress WHERE player=?", (player,)).fetchone()
+                xp = player_progress.xp + excluded.xp,
+                series = player_progress.series + 1,
+                goals = player_progress.goals + excluded.goals,
+                best = MAX(player_progress.best, excluded.best),
+                updated_at = excluded.updated_at
+        """, (player, xp, goals, goals, now))
+
+        row = conn.execute(
+            "SELECT xp FROM player_progress WHERE player = ?",
+            (player,)
+        ).fetchone()
+
         rating = min(99, 60 + int(row["xp"]) // 25)
-        conn.execute("INSERT INTO game_scores(player,goals,xp,rating,created_at) VALUES(?,?,?,?,?)",
-                     (player, goals, xp, rating, now))
-        conn.execute("""DELETE FROM game_scores WHERE id NOT IN
-                     (SELECT id FROM game_scores ORDER BY rating DESC, goals DESC, created_at DESC LIMIT 100)""")
+
+        conn.execute("""
+            INSERT INTO game_scores
+                (player, goals, xp, rating, created_at)
+            VALUES (?, ?, ?, ?, ?)
+        """, (player, goals, xp, rating, now))
+
+        conn.execute("""
+            DELETE FROM game_scores
+            WHERE id NOT IN (
+                SELECT id FROM game_scores
+                ORDER BY rating DESC, goals DESC, created_at DESC
+                LIMIT 100
+            )
+        """)
+
     return jsonify({"ok": True, **api_game_data().get_json()})
 
+
+# ---------------- HEALTH CHECK ----------------
+
 @app.get("/api/health")
+def health():
+    with db() as conn:
+        conn.execute("SELECT 1")
+
+    return jsonify({
+        "ok": True,
+        "database": "sqlite",
+        "persistent_path": str(DB_PATH)
+    })
+
+
+# ---------------- TELEGRAM BOT ----------------
 
 @app.post("/telegram-webhook")
 def telegram_webhook():
-    token = os.environ.get("TELEGRAM_BOT_TOKEN")
-    if not token:
-        return jsonify({"error": "Telegram token is not configured"}), 500
+    if not TELEGRAM_BOT_TOKEN:
+        app.logger.error("TELEGRAM_BOT_TOKEN is not configured")
+        return jsonify({"error": "Bot token is not configured"}), 500
 
     update = request.get_json(silent=True) or {}
     message = update.get("message", {})
+
+    if not message:
+        return jsonify({"ok": True})
+
     chat = message.get("chat", {})
-    text_message = message.get("text", "")
+    message_text = message.get("text", "")
 
-    if text_message.startswith("/start") and chat.get("id"):
-        import requests
-
+    if message_text.startswith("/start") and chat.get("id"):
         keyboard = {
             "inline_keyboard": [[
                 {
                     "text": "⚽ Открыть сайт команды",
-                    "web_app": {
-                        "url": "https://imena-football-site.onrender.com"
-                    }
+                    "web_app": {"url": SITE_URL}
                 }
             ]]
         }
 
         try:
-            requests.post(
-                f"https://api.telegram.org/bot{token}/sendMessage",
+            response = requests.post(
+                f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage",
                 json={
                     "chat_id": chat["id"],
                     "text": (
                         "⚽ Добро пожаловать в футбольную команду «Имена»!\n\n"
-                        "Открывай сайт, смотри игроков, матчи, таблицу и статистику."
+                        "Открывай приложение команды, смотри игроков, "
+                        "матчи, таблицу и статистику."
                     ),
                     "reply_markup": keyboard
                 },
                 timeout=10
-            ).raise_for_status()
+            )
+            response.raise_for_status()
+
         except requests.RequestException:
             app.logger.exception("Не удалось отправить сообщение Telegram")
             return jsonify({"error": "Telegram message failed"}), 502
 
     return jsonify({"ok": True})
 
-def health():
-    with db() as conn:
-        conn.execute("SELECT 1")
-    return jsonify({"ok": True, "database": "sqlite", "persistent_path": str(DB_PATH)})
+
+# Register the Telegram webhook when the app starts.
+def configure_telegram_webhook():
+    if not TELEGRAM_BOT_TOKEN:
+        app.logger.warning(
+            "Telegram bot is disabled: TELEGRAM_BOT_TOKEN is missing"
+        )
+        return
+
+    try:
+        response = requests.post(
+            f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/setWebhook",
+            json={"url": WEBHOOK_URL},
+            timeout=10
+        )
+        response.raise_for_status()
+        result = response.json()
+
+        if result.get("ok"):
+            app.logger.info("Telegram webhook configured")
+        else:
+            app.logger.error("Telegram webhook setup failed: %s", result)
+
+    except requests.RequestException:
+        app.logger.exception("Could not configure Telegram webhook")
+
+
+configure_telegram_webhook()
+
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", "5000")), debug=False)
+    app.run(
+        host="0.0.0.0",
+        port=int(os.environ.get("PORT", "5000")),
+        debug=False
+    )
+
