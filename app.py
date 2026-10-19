@@ -113,6 +113,51 @@ def api_game_series():
     return jsonify({"ok": True, **api_game_data().get_json()})
 
 @app.get("/api/health")
+
+@app.post("/telegram-webhook")
+def telegram_webhook():
+    token = os.environ.get("TELEGRAM_BOT_TOKEN")
+    if not token:
+        return jsonify({"error": "Telegram token is not configured"}), 500
+
+    update = request.get_json(silent=True) or {}
+    message = update.get("message", {})
+    chat = message.get("chat", {})
+    text_message = message.get("text", "")
+
+    if text_message.startswith("/start") and chat.get("id"):
+        import requests
+
+        keyboard = {
+            "inline_keyboard": [[
+                {
+                    "text": "⚽ Открыть сайт команды",
+                    "web_app": {
+                        "url": "https://imena-football-site.onrender.com"
+                    }
+                }
+            ]]
+        }
+
+        try:
+            requests.post(
+                f"https://api.telegram.org/bot{token}/sendMessage",
+                json={
+                    "chat_id": chat["id"],
+                    "text": (
+                        "⚽ Добро пожаловать в футбольную команду «Имена»!\n\n"
+                        "Открывай сайт, смотри игроков, матчи, таблицу и статистику."
+                    ),
+                    "reply_markup": keyboard
+                },
+                timeout=10
+            ).raise_for_status()
+        except requests.RequestException:
+            app.logger.exception("Не удалось отправить сообщение Telegram")
+            return jsonify({"error": "Telegram message failed"}), 502
+
+    return jsonify({"ok": True})
+
 def health():
     with db() as conn:
         conn.execute("SELECT 1")
